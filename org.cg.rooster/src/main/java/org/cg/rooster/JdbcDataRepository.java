@@ -3,7 +3,6 @@ package org.cg.rooster;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -168,11 +167,6 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			batchArgs.add(ArrayUtils.addAll(queryParams, dynamicColumnsParams));
 		}
 		getJdbcTemplate().batchUpdate(createQuery, batchArgs);
-
-		Iterator<S> iter = entities.iterator();
-		while ( iter.hasNext() ){
-			result.add( save(iter.next()) );
-		}
 		LOG.info(String.format("saved %s entities", entityList.size()));
 		return result;
 	}
