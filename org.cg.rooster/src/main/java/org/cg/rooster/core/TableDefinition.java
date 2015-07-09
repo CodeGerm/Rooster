@@ -17,11 +17,16 @@ public class TableDefinition {
 	private final String tableName;
 	private final List<String> primaryId;
 	private final int tenantId;
+	
 	private final boolean isMutable;
 	private List<String> columnSelection;
 	
+	/**
+	 * 
+	 * @param tableName The table name
+	 * @param primaryIdComponents The id components
+	 */
 	public TableDefinition(String tableName, String... primaryIdComponents) {
-		super();
 		Preconditions.checkArgument(!Strings.isNullOrEmpty(tableName), "tableName must be provided");
 		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
 		this.tableName = tableName;
@@ -31,8 +36,18 @@ public class TableDefinition {
 		this.columnSelection = null;
 	}
 	
+	/**
+	 * 
+	 * @param tableName The table name
+	 * @param isMutable If the table is immutable or not.
+	 * Note that there is no safeguards are in-place to enforce that a table declared as immutable during creation 
+	 * (IMMUTABLE_ROWS=true) doesn't actually mutate data. 
+	 * If that was to occur, the index would no longer be in sync with the table.
+	 * Therefore, it's necessary to enforce it here to make sure it's insync with the index.
+	 *
+	 * @param primaryIdComponents The id components
+	 */
 	public TableDefinition(String tableName, boolean isMutable, String... primaryIdComponents) {
-		super();
 		Preconditions.checkArgument(!Strings.isNullOrEmpty(tableName), "tableName must be provided");
 		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
 		this.tableName = tableName;
@@ -42,8 +57,19 @@ public class TableDefinition {
 		this.columnSelection = null;
 	}
 	
+	/**
+	 * 
+	 * @param tenantId The tenant id. By passing this, all the queries will be only running against the specified tenant.
+	 * @param tableName The table name
+	 * @param isMutable If the table is immutable or not.
+	 * Note that there is no safeguards are in-place to enforce that a table declared as immutable during creation 
+	 * (IMMUTABLE_ROWS=true) doesn't actually mutate data. 
+	 * If that was to occur, the index would no longer be in sync with the table.
+	 * Therefore, it's necessary to enforce it here to make sure it's insync with the index.
+	 *
+	 * @param primaryIdComponents The id components
+	 */
 	public TableDefinition(String tableName, int tenantId, boolean isMutable, String... primaryIdComponents) {
-		super();
 		Preconditions.checkArgument(!Strings.isNullOrEmpty(tableName), "tableName must be provided");
 		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
 		this.tableName = tableName;
@@ -52,15 +78,20 @@ public class TableDefinition {
 		this.isMutable = isMutable;
 		this.columnSelection = null;
 	}
-	
+
+	/**
+	 * Set the column selection followed by the SELECT statement. By default it will select all ("SELECT *")
+	 * This MUST be in sync with the RowColumnMapper.mapRow()
+	 * @param columnSelection The column names to select
+	 */
+	public void setColumnSelection(String... columnSelection) {
+		this.columnSelection = Collections.unmodifiableList(Arrays.asList(columnSelection));
+	}
+
 	public List<String> getColumnSelection() {
 		return columnSelection;
 	}
-
-	public void setColumnSelection(List<String> columnSelection) {
-		this.columnSelection = columnSelection;
-	}
-
+	
 	public String getTableName() {
 		return tableName;
 	}

@@ -3,7 +3,7 @@ package org.cg.rooster.phoenix;
 import org.apache.commons.dbcp.BasicDataSource;
 
 /**
- * Defines a data source for Phoenix
+ * Extends a {@link BasicDataSource} for Apache Phoenix
  * @author WZ
  *
  */
@@ -13,7 +13,7 @@ public class PhoenixDataSource extends BasicDataSource {
 	private String phoenixDriverClassName = "org.apache.phoenix.jdbc.PhoenixDriver"; 
 	private String phoenixConnectionUrl = "jdbc:phoenix:localhost";
 	private int JdbcInitialConnectionSize = 20;
-	private int JdbcMacConnectionSize = 0; //non-limit
+	private int JdbcMaxConnectionSize = 0; //non-limit
 
 	public PhoenixDataSource () {
 		this(-1);
@@ -26,11 +26,11 @@ public class PhoenixDataSource extends BasicDataSource {
 	 */
 	public PhoenixDataSource (int tenantId) {
 		super();
+		
 		this.setDriverClassName(phoenixDriverClassName);
 		this.setInitialSize(JdbcInitialConnectionSize);
-		this.setMaxActive(JdbcMacConnectionSize);
-		//TODO
-		//this.setDefaultAutoCommit(true);
+		this.setMaxActive(JdbcMaxConnectionSize);
+		this.setDefaultAutoCommit(true);
 		this.setUrl(phoenixConnectionUrl);
 		
 		if ( tenantId>0 ) {

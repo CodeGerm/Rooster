@@ -7,10 +7,9 @@ import java.util.Map;
 
 import org.cg.rooster.core.RowColumnMapper;
 import org.cg.rooster.core.TableDefinition;
-import org.cg.rooster.phoenix.PhoenixJdbcDataRepository;
 
 /**
- * A data repo for example event
+ * A Data Repository for {@link Event}
  * @author WZ
  *
  */
@@ -20,7 +19,7 @@ public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object
 		super( tableDef, ROW_COLUMN_MAPPER );
 	}
 
-	private final static TableDefinition tableDef = new TableDefinition("Event", -1, false, "tid", "uid", "event_time", "receipt_time");
+	private final static TableDefinition tableDef = new TableDefinition("Event", -1, true, "tid", "uid", "event_time", "receipt_time");
 	
 	public static final RowColumnMapper<Event> ROW_COLUMN_MAPPER = new RowColumnMapper<Event>() {
 		@Override
@@ -47,6 +46,12 @@ public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object
 	        columnMapping.put("message", t.getMessage());
 	        columnMapping.put("version", t.getVersion());
 	        return columnMapping;
+		}
+
+		@Override
+		public Map<String, Object> mapDynamicColumns(Event t) {
+			// TODO Auto-generated method stub
+			return null;
 		}
 	};
 }
