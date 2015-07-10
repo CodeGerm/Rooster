@@ -107,15 +107,15 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkNotNull(entity, "entity must be provided");
 		Preconditions.checkState(rowColumnMapper!=null, "rowColumnMapper must be initiated");
 
-		final Map<String, Object> columnMap = rowColumnMapper.mapColumns(entity);		
-		final Map<String, Object> dynamicColumnMap = rowColumnMapper.mapDynamicColumns(entity);
+		final Map<String, Object> columns = rowColumnMapper.mapColumns(entity);		
+		final Map<String, Object> dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
 		
-		Preconditions.checkState(columnMap!=null, "rowColumnMapper.mapColumns must be implemented");
-		Preconditions.checkState(dynamicColumnMap!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
+		Preconditions.checkState(columns!=null, "rowColumnMapper.mapColumns must be implemented");
+		Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 				
 		this.transactionalUpdate(
-				sqlGrammar.save(tableDefinition, columnMap, dynamicColumnMap), 
-				ArrayUtils.addAll(columnMap.values().toArray(), dynamicColumnMap.values().toArray()));	
+				sqlGrammar.save(tableDefinition, columns, dynamicColumns), 
+				ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));	
 		
 		LOG.info(String.format("entity saved: %s.", entity));
 		return entity;
@@ -139,15 +139,13 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			entity = iter.next();
 			columns = rowColumnMapper.mapColumns(entity);
 			dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
+			Preconditions.checkState(columns!=null, "rowColumnMapper.mapColumns must be implemented");
+			Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 			batchArgs.add(ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));
 			if (!iter.hasNext()) {
 				// In order to get column mapping for query construction, 
 				// we only need to get the mapping from the last entity.
-				Map<String, Object> columnMap = rowColumnMapper.mapColumns(entity);
-				Map<String, Object> dynamicColumnMap = rowColumnMapper.mapDynamicColumns(entity);
-				Preconditions.checkState(columnMap!=null, "rowColumnMapper.mapColumns must be implemented");
-				Preconditions.checkState(dynamicColumnMap!=null, "rowColumnMapper.mapColumns must be implemented");
-				createQuery = sqlGrammar.save(tableDefinition, columnMap, dynamicColumnMap);
+				createQuery = sqlGrammar.save(tableDefinition, columns, dynamicColumns);
 			}
 		}
 		long start = System.currentTimeMillis();
