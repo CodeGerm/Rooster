@@ -16,10 +16,16 @@ import org.springframework.data.domain.Persistable;
  */
 public class PhoenixJdbcDataRepository <T extends Persistable<ID>, ID extends Serializable> extends JdbcDataRepository<T, ID> {
 
-	public PhoenixJdbcDataRepository(TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper) {
+	/**
+	 * 
+	 * @param dataSource 
+	 * @param tableDefinition
+	 * @param rowColumnMapper
+	 */
+	public PhoenixJdbcDataRepository(PhoenixDataSource dataSource, TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper) {
 		super(tableDefinition, 
 			  rowColumnMapper, 
-			  new PhoenixDataSource(tableDefinition.getTenantId()),
+			  dataSource,
 			  PhoenixSqlGrammar.getInstance());
 	}
 }

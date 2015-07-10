@@ -16,10 +16,12 @@ import org.cg.rooster.core.TableDefinition;
 public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object[]> {
 	
 	public EventDataRepository() {
-		super( tableDef, ROW_COLUMN_MAPPER );
+		super( dataSource, tableDef, ROW_COLUMN_MAPPER );
 	}
 
-	private final static TableDefinition tableDef = new TableDefinition("Event", -1, true, "tid", "uid", "event_time", "receipt_time");
+	private final static PhoenixDataSource dataSource = new PhoenixDataSource("org.apache.phoenix.jdbc.PhoenixDriver", "jdbc:phoenix:localhost", 20, 0, false);
+	
+	private final static TableDefinition tableDef = new TableDefinition("Event", true, "tid", "uid", "event_time", "receipt_time");
 	
 	public static final RowColumnMapper<Event> ROW_COLUMN_MAPPER = new RowColumnMapper<Event>() {
 		@Override
@@ -46,12 +48,6 @@ public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object
 	        columnMapping.put("message", t.getMessage());
 	        columnMapping.put("version", t.getVersion());
 	        return columnMapping;
-		}
-
-		@Override
-		public Map<String, Object> mapDynamicColumns(Event t) {
-			// TODO Auto-generated method stub
-			return null;
 		}
 	};
 }

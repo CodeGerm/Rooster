@@ -16,7 +16,6 @@ public class TableDefinition {
 	
 	private final String tableName;
 	private final List<String> primaryId;
-	private final int tenantId;
 	
 	private final boolean isMutable;
 	private List<String> columnSelection;
@@ -31,7 +30,6 @@ public class TableDefinition {
 		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
 		this.tableName = tableName;
 		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
-		this.tenantId = -1;
 		this.isMutable = false;
 		this.columnSelection = null;
 	}
@@ -52,29 +50,6 @@ public class TableDefinition {
 		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
 		this.tableName = tableName;
 		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
-		this.tenantId = -1;
-		this.isMutable = isMutable;
-		this.columnSelection = null;
-	}
-	
-	/**
-	 * 
-	 * @param tenantId The tenant id. By passing this, all the queries will be only running against the specified tenant.
-	 * @param tableName The table name
-	 * @param isMutable If the table is immutable or not.
-	 * Note that there is no safeguards are in-place to enforce that a table declared as immutable during creation 
-	 * (IMMUTABLE_ROWS=true) doesn't actually mutate data. 
-	 * If that was to occur, the index would no longer be in sync with the table.
-	 * Therefore, it's necessary to enforce it here to make sure it's insync with the index.
-	 *
-	 * @param primaryIdComponents The id components
-	 */
-	public TableDefinition(String tableName, int tenantId, boolean isMutable, String... primaryIdComponents) {
-		Preconditions.checkArgument(!Strings.isNullOrEmpty(tableName), "tableName must be provided");
-		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
-		this.tableName = tableName;
-		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
-		this.tenantId = tenantId;
 		this.isMutable = isMutable;
 		this.columnSelection = null;
 	}
@@ -100,10 +75,6 @@ public class TableDefinition {
 		return primaryId;
 	}
 	
-	public int getTenantId() {
-		return tenantId;
-	}
-
 	public boolean isMutable() {
 		return isMutable;
 	}
@@ -111,7 +82,7 @@ public class TableDefinition {
 	@Override
 	public String toString() {
 		return "TableDefinition [tableName=" + tableName + ", primaryId="
-				+ primaryId + ", tenantId=" + tenantId + ", isMutable="
+				+ primaryId + ", isMutable="
 				+ isMutable + "]";
 	}
 
