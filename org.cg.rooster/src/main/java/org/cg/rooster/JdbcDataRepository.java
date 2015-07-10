@@ -39,9 +39,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	private final TableDefinition tableDefinition;
 	private final RowColumnMapper<T> rowColumnMapper;
 	private final JdbcTemplate jdbcTemplate;
-
-	private SqlGrammar sqlGrammar;
-	private DataSource dataSource;
+	private final SqlGrammar sqlGrammar;
 	
 	//TODO will be configurable
 	private final static long DEFAULT_QUERY_LIMIT = 5000;
@@ -62,25 +60,19 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	 * @param tableDefinition the table definition
 	 * @param rowColumnMapper the row column mapper 
 	 */
-	public JdbcDataRepository (TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper) {
+	public JdbcDataRepository (TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper, DataSource dataSource, SqlGrammar sqlGrammar) {
 		super();
 		Preconditions.checkNotNull(tableDefinition, "tableDefinition must be provided");
 		Preconditions.checkNotNull(rowColumnMapper, "rowColumnMapper must be provided");
+		Preconditions.checkNotNull(dataSource, "dataSource must be provided");
+		Preconditions.checkNotNull(sqlGrammar, "sqlGrammar must be provided");
+		
 		this.tableDefinition = tableDefinition;
-		this.rowColumnMapper = rowColumnMapper;
-		init();
-		
-		Preconditions.checkState(sqlGrammar!=null, "sqlGrammar must be initialized with inti()");
-		Preconditions.checkState(dataSource!=null, "dataSource must be initialized with inti()");
-		
-		jdbcTemplate = new JdbcTemplate(dataSource);
-		jdbcTemplate.setFetchSize(1000); 
+		this.rowColumnMapper = rowColumnMapper;		
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+		this.jdbcTemplate.setFetchSize(1000);
+		this.sqlGrammar = sqlGrammar;
 	}
-	
-	/**
-	 * Implement this method to initialize SqlGrammar and DataSource
-	 */
-	public abstract void init ();
 	
 	protected TableDefinition getTableDefinition() {
 		return tableDefinition;
@@ -96,19 +88,6 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 
 	protected SqlGrammar getSqlGrammar() {
 		return sqlGrammar;
-	}
-
-	protected void setSqlGrammar (SqlGrammar sqlGrammar) {
-		Preconditions.checkNotNull(sqlGrammar, "sqlGrammar must be provided");
-		this.sqlGrammar = sqlGrammar;
-	}
-	
-	protected DataSource getDataSource() {
-		return dataSource;
-	}
-
-	protected void setDataSource (DataSource dataSource) {
-		this.dataSource = dataSource;
 	}
 
 	/**

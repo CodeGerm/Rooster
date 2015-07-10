@@ -8,7 +8,7 @@ import org.cg.rooster.core.TableDefinition;
 import org.springframework.data.domain.Persistable;
 
 /**
- * A extended {@link JdbcDataRepository} using Aphache Phoenix JDBC driver and SQL grammar
+ * A extended {@link JdbcDataRepository} using Apache Phoenix JDBC driver and SQL grammar
  * @author WZ
  *
  * @param <T>
@@ -17,13 +17,9 @@ import org.springframework.data.domain.Persistable;
 public class PhoenixJdbcDataRepository <T extends Persistable<ID>, ID extends Serializable> extends JdbcDataRepository<T, ID> {
 
 	public PhoenixJdbcDataRepository(TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper) {
-		super(tableDefinition, rowColumnMapper);
+		super(tableDefinition, 
+			  rowColumnMapper, 
+			  new PhoenixDataSource(tableDefinition.getTenantId()), 
+			  PhoenixSqlGrammar.getInstance());
 	}
-	
-	@Override
-	public void init () {
-		this.setSqlGrammar( PhoenixSqlGrammar.getInstance() );
-		this.setDataSource( new PhoenixDataSource(this.getTableDefinition().getTenantId()) );
-	}
-
 }
