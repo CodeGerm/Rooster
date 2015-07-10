@@ -3,6 +3,7 @@ package org.cg.rooster;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -142,33 +143,32 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkNotNull(entities, "entities must be provided");
 		Preconditions.checkState(rowColumnMapper!=null, "rowColumnMapper must be initiated");
 		
-		List<S> result = new LinkedList<S> ();
-
-		final List<S> entityList = Lists.newArrayList(entities);
-		
-		// this may look ugly, but in order to get column mapping, we only need to get the key set from the first entity
-		S firstEntity = entityList.get(0);
-		Preconditions.checkState(rowColumnMapper.mapColumns(firstEntity)!=null, "rowColumnMapper.mapColumns must be implemented");
-		
-		final Map<String, Object> columnMap = new LinkedHashMap<String, Object>(rowColumnMapper.mapColumns(firstEntity));
-		final Map<String, Object> dynamicColumnMap = new LinkedHashMap<String, Object>(rowColumnMapper.mapDynamicColumns(firstEntity));
-		
-		final String createQuery = sqlGrammar.save(tableDefinition, columnMap, dynamicColumnMap);
-
 		List<Object[]> batchArgs = new LinkedList<Object[]>();
 		Map<String, Object> columns;
 		Map<String, Object> dynamicColumns;
-		for (S entity : entityList) {
+		String createQuery = "";
+		Iterator<S> iter = entities.iterator();
+		S entity;
+		while (iter.hasNext()) {
+			entity = iter.next();
 			columns = new LinkedHashMap<String, Object>(rowColumnMapper.mapColumns(entity));
 			dynamicColumns = new LinkedHashMap<String, Object>(rowColumnMapper.mapDynamicColumns(entity));
-			final Object[] queryParams = columns.values().toArray();
-			final Object[] dynamicColumnsParams = dynamicColumns.values().toArray();
-			
-			batchArgs.add(ArrayUtils.addAll(queryParams, dynamicColumnsParams));
+			batchArgs.add(ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));
+			if (!iter.hasNext()) {
+				// In order to get column mapping for query construction, 
+				// we only need to get the mapping from the last entity.
+				Map<String, Object> columnMap = rowColumnMapper.mapColumns(entity);
+				Map<String, Object> dynamicColumnMap = rowColumnMapper.mapDynamicColumns(entity);
+				Preconditions.checkState(columnMap!=null, "rowColumnMapper.mapColumns must be implemented");
+				Preconditions.checkState(dynamicColumnMap!=null, "rowColumnMapper.mapColumns must be implemented");
+				createQuery = sqlGrammar.save(tableDefinition, columnMap, dynamicColumnMap);
+			}
 		}
+		long start = System.currentTimeMillis();
 		getJdbcTemplate().batchUpdate(createQuery, batchArgs);
-		LOG.info(String.format("saved %s entities", entityList.size()));
-		return result;
+		long end = System.currentTimeMillis() - start;
+		LOG.info(String.format("saved %s entities in %sms", batchArgs.size(), end));
+		return entities;
 	}
 
 	/**
