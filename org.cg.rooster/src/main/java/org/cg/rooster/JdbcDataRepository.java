@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -119,18 +118,16 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public <S extends T> S save (S entity) {
 		Preconditions.checkNotNull(entity, "entity must be provided");
 		Preconditions.checkState(rowColumnMapper!=null, "rowColumnMapper must be initiated");
-		Preconditions.checkState(rowColumnMapper.mapColumns(entity)!=null, "rowColumnMapper.mapColumns must be implemented");
-		Preconditions.checkState(rowColumnMapper.mapDynamicColumns(entity)!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 
-		final Map<String, Object> columnMap = new LinkedHashMap<String, Object>(rowColumnMapper.mapColumns(entity));
-		final Object[] columnsParams = columnMap.values().toArray();
+		final Map<String, Object> columnMap = rowColumnMapper.mapColumns(entity);		
+		final Map<String, Object> dynamicColumnMap = rowColumnMapper.mapDynamicColumns(entity);
 		
-		final Map<String, Object> dynamicColumnMap = new LinkedHashMap<String, Object>(rowColumnMapper.mapDynamicColumns(entity));
-		final Object[] dynamicColumnsParams = dynamicColumnMap.values().toArray();
+		Preconditions.checkState(columnMap!=null, "rowColumnMapper.mapColumns must be implemented");
+		Preconditions.checkState(dynamicColumnMap!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 		
 		final String createQuery = sqlGrammar.save(tableDefinition, columnMap, dynamicColumnMap);
 		
-		getJdbcTemplate().update(createQuery, ArrayUtils.addAll(columnsParams, dynamicColumnsParams));
+		getJdbcTemplate().update(createQuery, ArrayUtils.addAll(columnMap.values().toArray(), dynamicColumnMap.values().toArray()));
 		LOG.info(String.format("entity saved: %s.", entity));
 		return entity;
 	}
@@ -151,8 +148,8 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		S entity;
 		while (iter.hasNext()) {
 			entity = iter.next();
-			columns = new LinkedHashMap<String, Object>(rowColumnMapper.mapColumns(entity));
-			dynamicColumns = new LinkedHashMap<String, Object>(rowColumnMapper.mapDynamicColumns(entity));
+			columns = rowColumnMapper.mapColumns(entity);
+			dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
 			batchArgs.add(ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));
 			if (!iter.hasNext()) {
 				// In order to get column mapping for query construction, 
