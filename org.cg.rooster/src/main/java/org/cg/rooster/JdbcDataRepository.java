@@ -17,12 +17,19 @@ import org.cg.rooster.core.Condition;
 import org.cg.rooster.core.RowColumnMapper;
 import org.cg.rooster.core.SqlGrammar;
 import org.cg.rooster.core.TableDefinition;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 /**
@@ -40,6 +47,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	private final RowColumnMapper<T> rowColumnMapper;
 	private final JdbcTemplate jdbcTemplate;
 	private final SqlGrammar sqlGrammar;
+	private final PlatformTransactionManager transactionManager;
 	
 	//TODO will be configurable
 	private final static long DEFAULT_QUERY_LIMIT = 5000;
@@ -72,6 +80,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 		this.jdbcTemplate.setFetchSize(1000);
 		this.sqlGrammar = sqlGrammar;
+		this.transactionManager = new DataSourceTransactionManager(dataSource);
 	}
 	
 	protected TableDefinition getTableDefinition() {
@@ -103,10 +112,11 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		
 		Preconditions.checkState(columnMap!=null, "rowColumnMapper.mapColumns must be implemented");
 		Preconditions.checkState(dynamicColumnMap!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
+				
+		this.transactionalUpdate(
+				sqlGrammar.save(tableDefinition, columnMap, dynamicColumnMap), 
+				ArrayUtils.addAll(columnMap.values().toArray(), dynamicColumnMap.values().toArray()));	
 		
-		final String createQuery = sqlGrammar.save(tableDefinition, columnMap, dynamicColumnMap);
-		
-		getJdbcTemplate().update(createQuery, ArrayUtils.addAll(columnMap.values().toArray(), dynamicColumnMap.values().toArray()));
 		LOG.info(String.format("entity saved: %s.", entity));
 		return entity;
 	}
@@ -141,7 +151,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			}
 		}
 		long start = System.currentTimeMillis();
-		getJdbcTemplate().batchUpdate(createQuery, batchArgs);
+		this.transactionalBatchUpdate(createQuery, batchArgs);
 		long end = System.currentTimeMillis() - start;
 		LOG.info(String.format("saved %s entities in %sms", batchArgs.size(), end));
 		return entities;
@@ -174,7 +184,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
 		
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
-		getJdbcTemplate().update(sqlGrammar.delete(tableDefinition, 1), idColumns);
+		this.transactionalUpdate(sqlGrammar.delete(tableDefinition), idColumns);
 	}
 
 	/**
@@ -184,25 +194,21 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public void delete (final Iterable<ID> ids) {
 		Preconditions.checkNotNull(ids, "ids must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
+		
+		Iterator<ID> iter = ids.iterator();
+		Preconditions.checkArgument(iter.hasNext(), "ids must be provided");
 
-		final List<ID> idsList = Lists.newLinkedList(ids);
-		if (idsList.isEmpty()) {
-			return;
-		}
-		
-		//need to put all id components for all ids in a single flat array
-		final List<Object> idColumnValuesList = new LinkedList<Object>();
-		for (ID id : ids) {
-			List<Object> idList;
+		List<Object[]> batchArgs = new LinkedList<Object[]>();
+		ID id;
+		while (iter.hasNext()) {
+			id = iter.next();
 			if (id instanceof Object[]) {
-				idList = Arrays.asList((Object[]) id);
+				batchArgs.add((Object[]) id);
 			} else {
-				idList = Collections.<Object>singletonList(id);
+				batchArgs.add(new Object[]{id});
 			}
-			idColumnValuesList.addAll(idList);
 		}
-		
-		getJdbcTemplate().update(sqlGrammar.delete(tableDefinition, idsList.size()), idColumnValuesList.toArray());
+		this.transactionalBatchUpdate(sqlGrammar.delete(tableDefinition), batchArgs);
 	}
 	
 	/**
@@ -368,6 +374,32 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 				sqlGrammar.selectByCondition(tableDefinition, sort, limit, conditions, rowColumnMapper.mapDynamicColumnsType()), 
 				rowColumnMapper, 
 				Condition.getParamsFromConditions(conditions));
+	}
+	
+	private void transactionalUpdate (String preparedStatement, Object... args) {
+		TransactionDefinition def = new DefaultTransactionDefinition();
+		TransactionStatus status = transactionManager.getTransaction(def);
+		try{
+			getJdbcTemplate().update(preparedStatement, args);
+			transactionManager.commit(status);
+		} catch (DataAccessException e) {
+			LOG.error("Error in upserting record, rolling back");
+			transactionManager.rollback(status);
+			LOG.error(Throwables.getStackTraceAsString(e));
+		}
+	}
+	
+	private void transactionalBatchUpdate (String preparedStatement, List<Object[]> args) {
+		TransactionDefinition def = new DefaultTransactionDefinition();
+		TransactionStatus status = transactionManager.getTransaction(def);
+		try{
+			getJdbcTemplate().batchUpdate(preparedStatement, args);
+			transactionManager.commit(status);
+		} catch (DataAccessException e) {
+			LOG.error("Error in upserting records, rolling back");
+			transactionManager.rollback(status);
+			LOG.error(Throwables.getStackTraceAsString(e));
+		}
 	}
 
 }

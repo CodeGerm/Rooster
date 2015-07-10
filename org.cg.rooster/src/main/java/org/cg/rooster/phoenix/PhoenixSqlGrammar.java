@@ -120,11 +120,11 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String delete (TableDefinition table, int idSize) {
+	public String delete (TableDefinition table) {
 		Preconditions.checkNotNull(table, "table must be provided");
 		
 		String query = DELETE + FROM + table.getTableName();
-		return query + whereByIdsClause(table, idSize);
+		return query + whereByIdsClause(table, 1);
 	}
 
 	/**

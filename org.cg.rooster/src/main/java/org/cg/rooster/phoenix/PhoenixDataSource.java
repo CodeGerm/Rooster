@@ -30,7 +30,7 @@ public class PhoenixDataSource extends BasicDataSource {
 		this.setDriverClassName(phoenixDriverClassName);
 		this.setInitialSize(JdbcInitialConnectionSize);
 		this.setMaxActive(JdbcMaxConnectionSize);
-		this.setDefaultAutoCommit(true);
+		this.setDefaultAutoCommit(false);
 		this.setUrl(phoenixConnectionUrl);
 		
 		if ( tenantId>0 ) {
@@ -38,5 +38,5 @@ public class PhoenixDataSource extends BasicDataSource {
 			this.setConnectionProperties(tenantIdProperty);
 		}
 	}
-	
+
 }

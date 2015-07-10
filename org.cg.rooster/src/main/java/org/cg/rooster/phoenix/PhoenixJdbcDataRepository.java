@@ -19,7 +19,7 @@ public class PhoenixJdbcDataRepository <T extends Persistable<ID>, ID extends Se
 	public PhoenixJdbcDataRepository(TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper) {
 		super(tableDefinition, 
 			  rowColumnMapper, 
-			  new PhoenixDataSource(tableDefinition.getTenantId()), 
+			  new PhoenixDataSource(tableDefinition.getTenantId()),
 			  PhoenixSqlGrammar.getInstance());
 	}
 }

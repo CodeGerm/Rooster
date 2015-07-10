@@ -34,7 +34,7 @@ public interface SqlGrammar {
 	 * @param table the {@link TableDefinition} class
 	 * @return the SQL string
 	 */
-	public String delete (TableDefinition table, int idSize);
+	public String delete (TableDefinition table);
 
 	/**
 	 * generate SQL for selecting row(s) by id
