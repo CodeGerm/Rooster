@@ -19,6 +19,11 @@ public class PhoenixDataSource extends BasicDataSource {
 	protected boolean autocommit;
 	protected int tenantId;
 
+
+	public PhoenixDataSource() {
+		
+	}
+	
 	/**
 	 * 
 	 * @param phoenixDriverClassName The JDBC driver class name
