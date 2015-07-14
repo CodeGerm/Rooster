@@ -14,11 +14,10 @@ public class PhoenixDataSource extends BasicDataSource {
 
 	protected String phoenixDriverClassName; 
 	protected String phoenixConnectionUrl;
-	protected int initialConnectionSize;
-	protected int maxConnectionSize;
-	protected boolean autocommit;
-	protected int tenantId;
-
+	protected Integer initialConnectionSize;
+	protected Integer maxConnectionSize;
+	protected Boolean autocommit;
+	protected Integer tenantId;
 
 	public PhoenixDataSource() {
 		
@@ -48,9 +47,9 @@ public class PhoenixDataSource extends BasicDataSource {
 	public PhoenixDataSource(
 			String phoenixDriverClassName, 
 			String phoenixConnectionUrl, 
-			int initialConnectionSize,
-			int maxConnectionSize, 
-			boolean autocommit) {
+			Integer initialConnectionSize,
+			Integer maxConnectionSize, 
+			Boolean autocommit) {
 		super();
 		setPhoenixDriverClassName(phoenixDriverClassName);
 		setPhoenixConnectionUrl(phoenixConnectionUrl);
@@ -71,10 +70,10 @@ public class PhoenixDataSource extends BasicDataSource {
 	public PhoenixDataSource(
 			String phoenixDriverClassName,
 			String phoenixConnectionUrl, 
-			int initialConnectionSize,
-			int maxConnectionSize, 
-			boolean autocommit, 
-			int tenantId) {
+			Integer initialConnectionSize,
+			Integer maxConnectionSize, 
+			Boolean autocommit, 
+			Integer tenantId) {
 		super();
 		setPhoenixDriverClassName(phoenixDriverClassName);
 		setPhoenixConnectionUrl(phoenixConnectionUrl);
@@ -104,38 +103,42 @@ public class PhoenixDataSource extends BasicDataSource {
 		this.setUrl(phoenixConnectionUrl);
 	}
 
-	public int getInitialConnectionSize() {
+	public Integer getInitialConnectionSize() {
 		return initialConnectionSize;
 	}
 
-	public void setInitialConnectionSize(int initialConnectionSize) {
+	public void setInitialConnectionSize(Integer initialConnectionSize) {
+		Preconditions.checkNotNull(initialConnectionSize, "initialConnectionSize must be provided");
 		this.initialConnectionSize = initialConnectionSize;
 		this.setInitialSize(initialConnectionSize);
 	}
 
-	public int getMaxConnectionSize() {
+	public Integer getMaxConnectionSize() {
 		return maxConnectionSize;
 	}
 
-	public void setMaxConnectionSize(int maxConnectionSize) {
+	public void setMaxConnectionSize(Integer maxConnectionSize) {
+		Preconditions.checkNotNull(maxConnectionSize, "maxConnectionSize must be provided");
 		this.maxConnectionSize = maxConnectionSize;
 		this.setMaxActive(maxConnectionSize);
 	}
 
-	public boolean isAutocommit() {
+	public Boolean isAutocommit() {
 		return autocommit;
 	}
 
-	public void setAutocommit(boolean autocommit) {
+	public void setAutocommit(Boolean autocommit) {
+		Preconditions.checkNotNull(autocommit, "autocommit must be provided");
 		this.autocommit = autocommit;
 		this.setDefaultAutoCommit(autocommit);
 	}
 
-	public int getTenantId() {
+	public Integer getTenantId() {
 		return tenantId;
 	}
 
-	public void setTenantId(int tenantId) {
+	public void setTenantId(Integer tenantId) {
+		Preconditions.checkNotNull(tenantId, "tenantId must be provided");
 		this.tenantId = tenantId;
 		final String tenantIdProperty = String.format("TenantId=%s;", tenantId);
 		this.setConnectionProperties(tenantIdProperty);
