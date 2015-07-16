@@ -16,16 +16,18 @@ public abstract class RowColumnMapper<T> implements RowMapper<T> {
 	
 	/**
 	 * 
-	 * Implementations must implement this method to map each fields of data in the T in order to persist the entity. 
+	 * Subclass can implement this method to map each fields of data in the T in order to persist the entity. 
 	 * 
 	 * @param t The entity to be mapped
 	 * @return A Map that maps each fields of data to its column names in table
 	 */
-	public abstract Map<String, Object> mapColumns(T t);
+	public Map<String, Object> mapColumns(T t) {
+		return new LinkedHashMap<String, Object>();
+	}
 	
 	/**
 	 * 
-	 * Implementations can implement this method to map fields of data in the T 
+	 * Subclass can implement this method to map fields of data in the T 
 	 * that is dynamic columns in table in order to persist the entity. 
 	 * 
 	 * ALSO IMPLEMENT {@link RowColumnMapper}.mapDynamicColumnsType 
@@ -39,7 +41,7 @@ public abstract class RowColumnMapper<T> implements RowMapper<T> {
 	
 	/**
 	 * 
-	 * Implementations can implement this method to map each column to its data type in the table. 
+	 * Subclass can implement this method to map each column to its data type in the table. 
 	 * 
 	 * ALSO IMPLEMENT {@link RowColumnMapper}.mapDynamicColumnsType 
 	 * 

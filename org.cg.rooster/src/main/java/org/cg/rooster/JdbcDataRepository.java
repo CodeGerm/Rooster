@@ -110,7 +110,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		final Map<String, Object> columns = rowColumnMapper.mapColumns(entity);		
 		final Map<String, Object> dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
 		
-		Preconditions.checkState(columns!=null, "rowColumnMapper.mapColumns must be implemented");
+		Preconditions.checkState(columns!=null && !columns.isEmpty(), "rowColumnMapper.mapColumns must be implemented");
 		Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 				
 		this.transactionalUpdate(
@@ -139,7 +139,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			entity = iter.next();
 			columns = rowColumnMapper.mapColumns(entity);
 			dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
-			Preconditions.checkState(columns!=null, "rowColumnMapper.mapColumns must be implemented");
+			Preconditions.checkState(columns!=null && !columns.isEmpty(), "rowColumnMapper.mapColumns must be implemented");
 			Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 			batchArgs.add(ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));
 			if (!iter.hasNext()) {
