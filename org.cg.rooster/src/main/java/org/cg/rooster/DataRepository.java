@@ -137,12 +137,40 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	 */
 	public Iterable<T> find (final Iterable<ID> ids, Sort sort, long limit);
 	
+	/**
+	 * find entities with conditions
+	 * 
+	 * @param conditions
+	 * @return a collection of entities
+	 */
 	public Iterable<T> find (final List<Condition> conditions);
 	
+	/**
+	 * find entities with conditions and limit
+	 *
+	 * @param conditions
+	 * @param limit
+	 * @return a collection of entities
+	 */
 	public Iterable<T> find (final List<Condition> conditions, long limit);
 	
+	/**
+	 * find entities with conditions and sorting
+	 * 
+	 * @param conditions
+	 * @param sort
+	 * @return a collection of entities
+	 */
 	public Iterable<T> find (final List<Condition> conditions, Sort sort);
 	
+	/**
+	 * find entities with conditions, sorting and limit
+	 *
+	 * @param conditions
+	 * @param sort
+	 * @param limit
+	 * @return a collection of entities
+	 */
 	public Iterable<T> find (final List<Condition> conditions, Sort sort, long limit);
 
 }
