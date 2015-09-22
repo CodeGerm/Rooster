@@ -30,7 +30,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 
 /**
  * A generic JDBC data repository that implements {@link PagingAndSortingRepository}
@@ -117,7 +116,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 				sqlGrammar.save(tableDefinition, columns, dynamicColumns), 
 				ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));	
 		
-		LOG.info(String.format("entity saved: %s.", entity));
+		LOG.info(String.format("[save]entity saved: %s.", entity));
 		return entity;
 	}
 
@@ -151,7 +150,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		long start = System.currentTimeMillis();
 		this.transactionalBatchUpdate(createQuery, batchArgs);
 		long end = System.currentTimeMillis() - start;
-		LOG.info(String.format("saved %s entities in %sms", batchArgs.size(), end));
+		LOG.info(String.format("[save]saved %s entities in %sms", batchArgs.size(), end));
 		return entities;
 	}
 
@@ -161,7 +160,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public boolean exists (ID id) {
 		Preconditions.checkNotNull(id, "id must be provided");
-		
+
 		return this.find(id) != null;
 	}
 
@@ -170,6 +169,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	 */
 	@Override
 	public long count() {
+		LOG.info(String.format("[count]%s", tableDefinition.getTableName()));
 		return getJdbcTemplate().queryForObject(sqlGrammar.count(tableDefinition), Long.class);
 	}
 
@@ -183,6 +183,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
 		this.transactionalUpdate(sqlGrammar.delete(tableDefinition), idColumns);
+		LOG.info(String.format("[delete]deleted %s", id));
 	}
 
 	/**
@@ -207,13 +208,14 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			}
 		}
 		this.transactionalBatchUpdate(sqlGrammar.delete(tableDefinition), batchArgs);
+		LOG.info(String.format("[delete]%s entities deleted", batchArgs.size()));
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Iterable<T> findAll () {		
+	public Iterable<T> findAll () {
 		return findAll(null, DEFAULT_QUERY_LIMIT);
 	}
 	
@@ -223,7 +225,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public Iterable<T> findAll (Sort sort) {
 		Preconditions.checkNotNull(sort, "sort must be provided");
-		
+
 		return findAll(sort, DEFAULT_QUERY_LIMIT);
 	}
 
@@ -233,7 +235,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public Iterable<T> findAll (long limit) {
 		Preconditions.checkArgument( (limit>0 && limit<=DEFAULT_QUERY_LIMIT), "limit out of supported range");
-		
+
 		return findAll(null, limit);
 	}
 
@@ -243,10 +245,15 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public Iterable<T> findAll(Sort sort, long limit) {
 		Preconditions.checkArgument( (limit>0 && limit<=DEFAULT_QUERY_LIMIT), "limit out of supported range");
-
-		return getJdbcTemplate().query(
+		
+		long start = System.currentTimeMillis();
+		List<T> result = getJdbcTemplate().query(
 				sqlGrammar.selectById(tableDefinition, sort, limit, -1, rowColumnMapper.mapDynamicColumnsType()), 
 				rowColumnMapper);
+		long end = System.currentTimeMillis() - start;
+		LOG.info(String.format("[findAll]limit:%s; sort:%s; found %s in %sms", 
+				limit, sort, result.size(), end));
+		return result;
 	}
 	
 	/**
@@ -257,6 +264,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkNotNull(id, "id must be provided");
 		
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
+		LOG.info(String.format("[find]id:%s", Arrays.toString(idColumns)));
 		final List<T> entity = jdbcTemplate.query(
 				sqlGrammar.selectById(tableDefinition, null, DEFAULT_QUERY_LIMIT, 1, rowColumnMapper.mapDynamicColumnsType()), 
 				rowColumnMapper,
@@ -304,14 +312,14 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public Iterable<T> find (final Iterable<ID> ids, Sort sort, long limit) {
 		Preconditions.checkNotNull(ids, "ids must be provided");
 		Preconditions.checkArgument( (limit>0 && limit<=DEFAULT_QUERY_LIMIT), "limit out of supported range");
-		
-		final List<ID> idsList = Lists.newLinkedList(ids);
-		if (idsList.isEmpty()) {
+				
+		if (!ids.iterator().hasNext()) {
 			return Collections.emptyList();
 		}
 		
 		//need to put all id components for all ids in a single flat array
 		final List<Object> idColumnValuesList = new LinkedList<Object>();
+		int idSize = 0;
 		for (ID id : ids) {
 			List<Object> idList;
 			if (id instanceof Object[]) {
@@ -320,12 +328,19 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 				idList = Collections.<Object>singletonList(id);
 			}
 			idColumnValuesList.addAll(idList);
-		}		
+			idSize++;
+		}
 		
-		return getJdbcTemplate().query(
-				sqlGrammar.selectById(tableDefinition, sort, limit, idsList.size(), rowColumnMapper.mapDynamicColumnsType()), 
+		Object[] idsArray = idColumnValuesList.toArray();		
+		long start = System.currentTimeMillis();
+		List<T> result = getJdbcTemplate().query(
+				sqlGrammar.selectById(tableDefinition, sort, limit, idSize, rowColumnMapper.mapDynamicColumnsType()), 
 				rowColumnMapper, 
-				idColumnValuesList.toArray());
+				idsArray);
+		long end = System.currentTimeMillis() - start;
+		LOG.info(String.format("[find]ids:%s; limit:%s; sort:%s; found %s in %sms", 
+				Arrays.toString(idsArray), limit, sort, result.size(), end));
+		return result;
 	}
 
 	/**
@@ -367,11 +382,16 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public Iterable<T> find (final List<Condition> conditions, Sort sort, long limit) {
 		Preconditions.checkNotNull(conditions, "conditions must be provided");
 		Preconditions.checkArgument( (limit>0 && limit<=DEFAULT_QUERY_LIMIT), "limit out of range");
-
-		return getJdbcTemplate().query(
+		
+		long start = System.currentTimeMillis();
+		List<T> result = getJdbcTemplate().query(
 				sqlGrammar.selectByCondition(tableDefinition, sort, limit, conditions, rowColumnMapper.mapDynamicColumnsType()), 
 				rowColumnMapper, 
 				Condition.getParamsFromConditions(conditions));
+		long end = System.currentTimeMillis() - start;
+		LOG.info(String.format("[findWithCodition]limit:%s; sort:%s; found %s in %sms",
+				limit, sort, result.size(), end));
+		return result;
 	}
 	
 	private void transactionalUpdate (String preparedStatement, Object... args) {
