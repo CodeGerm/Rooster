@@ -16,7 +16,7 @@ public interface SqlGrammar {
 	 * get the SQL dialect supported data type from the argument
 	 * 
 	 * @param arg The argument Object
-	 * @return
+	 * @return the SQL string
 	 */
 	public String getParamDataType (Object arg);
 
@@ -58,7 +58,7 @@ public interface SqlGrammar {
 	 * @param table
 	 * @param columnMapper The column mapper
 	 * @param dynamicColumnMapper The dynamic column mapper
-	 * @return
+	 * @return the SQL string
 	 */
 	public String save (TableDefinition table, final Map<String, Object> columnMapper, final Map<String, Object> dynamicColumnMapper);
 

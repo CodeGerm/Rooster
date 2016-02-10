@@ -9,7 +9,7 @@ public interface ConditionOperator {
 	
 	/**
 	 * Get the operator SQL string
-	 * @return
+	 * @return the operator SQL string
 	 */
 	public String getOperatorSQLStr();
 }

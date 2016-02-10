@@ -65,7 +65,7 @@ public class PhoenixDataSource extends BasicDataSource {
 	 * @param initialConnectionSize The initial connection size
 	 * @param maxConnectionSize The maxim connection size
 	 * @param autocommit Disable auto commit if you want batch update
-	 * @param tenantId The tenant Id Note: DDL property has to be enabled: {@linkplain http://phoenix.apache.org/multi-tenancy.html}
+	 * @param tenantId The tenant Id Note: DDL property has to be enabled: http://phoenix.apache.org/multi-tenancy.html
 	 */
 	public PhoenixDataSource(
 			String phoenixDriverClassName,

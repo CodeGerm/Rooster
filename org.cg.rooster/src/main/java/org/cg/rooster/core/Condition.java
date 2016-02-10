@@ -66,7 +66,7 @@ public class Condition {
 	/**
 	 * Recursively parse conditions and generates the SQL for PreparedStatement
 	 * @param conditon The condition
-	 * @return
+	 * @return the condition string
 	 */
 	public static String parseCondition (Condition conditon) {
 		Preconditions.checkNotNull(conditon, "condition must be provided");
@@ -93,7 +93,7 @@ public class Condition {
 	/**
 	 * Recursively parse parameters and generates the parameter lists for PreparedStatement
 	 * @param conditions The condition list
-	 * @return
+	 * @return the parsed condition parameters
 	 */
 	public static Object[] getParamsFromConditions (final List<Condition> conditions) {
 		Preconditions.checkNotNull(conditions, "conditions must be provided");

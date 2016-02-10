@@ -63,7 +63,7 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 
 	/**
 	 * Get the singleton instance of PhoenixSqlGrammar
-	 * @return
+	 * @return the singleton instance
 	 */
 	public static PhoenixSqlGrammar getInstance( ) {
 		return singleton;
