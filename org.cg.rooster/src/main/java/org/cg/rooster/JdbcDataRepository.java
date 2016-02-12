@@ -66,8 +66,23 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	 * 
 	 * @param tableDefinition the table definition
 	 * @param rowColumnMapper the row column mapper 
+	 * @param dataSource the data source
+	 * @param sqlGrammar the sql grammar
 	 */
 	public JdbcDataRepository (TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper, DataSource dataSource, SqlGrammar sqlGrammar) {
+		this(tableDefinition, rowColumnMapper, dataSource, sqlGrammar, true);
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param tableDefinition the table definition
+	 * @param rowColumnMapper the row column mapper 
+	 * @param dataSource the data source
+	 * @param sqlGrammar the sql grammar
+	 * @param lazyinit  is lazy connection initialization or not
+	 */
+	public JdbcDataRepository (TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper, DataSource dataSource, SqlGrammar sqlGrammar, boolean lazyinit) {
 		super();
 		Preconditions.checkNotNull(tableDefinition, "tableDefinition must be provided");
 		Preconditions.checkNotNull(rowColumnMapper, "rowColumnMapper must be provided");
@@ -75,8 +90,8 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkNotNull(sqlGrammar, "sqlGrammar must be provided");
 		
 		this.tableDefinition = tableDefinition;
-		this.rowColumnMapper = rowColumnMapper;		
-		this.jdbcTemplate = new JdbcTemplate(dataSource);
+		this.rowColumnMapper = rowColumnMapper;
+		this.jdbcTemplate = new JdbcTemplate(dataSource, lazyinit);
 		this.jdbcTemplate.setFetchSize(1000);
 		this.sqlGrammar = sqlGrammar;
 		this.transactionManager = new DataSourceTransactionManager(dataSource);
