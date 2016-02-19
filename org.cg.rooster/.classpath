@@ -22,5 +22,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/RedshiftJDBC41-1.1.7.1007.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
