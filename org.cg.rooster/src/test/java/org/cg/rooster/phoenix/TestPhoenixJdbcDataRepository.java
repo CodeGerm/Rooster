@@ -89,7 +89,7 @@ public class TestPhoenixJdbcDataRepository {
 	public void testFindOne() {
 		Event e = dataRepository.find(new Object[] {1, "TEST_USER", 1434441175000l, 1434441177000l});
 		System.out.println(e);
-		Assert.assertNull(e);
+		Assert.assertNotNull(e);
 	}
 
 	@Test
