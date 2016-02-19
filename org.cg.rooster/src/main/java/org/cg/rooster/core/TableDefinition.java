@@ -21,7 +21,6 @@ public class TableDefinition {
 	private List<String> columnSelection;
 	
 	/**
-	 * 
 	 * @param tableName The table name
 	 * @param primaryIdComponents The id components
 	 */
@@ -36,7 +35,7 @@ public class TableDefinition {
 	}
 	
 	/**
-	 * @param isReadonly is the table readonly
+	 * @param isReadonly If the table is readonly or not
 	 * @param tableName The table name
 	 * @param primaryIdComponents The id components
 	 */
@@ -51,9 +50,8 @@ public class TableDefinition {
 	}
 	
 	/**
-	 * 
 	 * @param tableName The table name
-	 * @param isMutable If the table is immutable or not.
+	 * @param isMutable If the table is mutable or not.
 	 * Note that there is no safeguards are in-place to enforce that a table declared as immutable during creation 
 	 * (IMMUTABLE_ROWS=true) doesn't actually mutate data. 
 	 * If that was to occur, the index would no longer be in sync with the table.
@@ -72,9 +70,9 @@ public class TableDefinition {
 	}
 	
 	/**
-	 * 
+	 * @param isReadonly If the table is readonly or not
 	 * @param tableName The table name
-	 * @param isMutable If the table is immutable or not.
+	 * @param isMutable If the table is mutable or not.
 	 * Note that there is no safeguards are in-place to enforce that a table declared as immutable during creation 
 	 * (IMMUTABLE_ROWS=true) doesn't actually mutate data. 
 	 * If that was to occur, the index would no longer be in sync with the table.

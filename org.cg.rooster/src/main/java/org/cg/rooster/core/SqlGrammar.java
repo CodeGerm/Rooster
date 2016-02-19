@@ -34,24 +34,33 @@ public interface SqlGrammar {
 	 * @param table the {@link TableDefinition} class
 	 * @return the SQL string
 	 */
-	public String delete (TableDefinition table);
 
+	public String delete (TableDefinition table);
+	
 	/**
 	 * generate SQL for selecting row(s) by id
-	 * 
-	 * @param table the {@link TableDefinition} class
+	 *  
+	 * @param table table the {@link TableDefinition} class
+	 * @param sort
+	 * @param limit
+	 * @param idSize
+	 * @param dynamicColumnsType
 	 * @return the SQL string
 	 */
 	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, final Map<String, String> dynamicColumnsType);
-
+	
 	/**
 	 * generate SQL for selecting row(s) with conditions
-	 * 
+	 *  
 	 * @param table the {@link TableDefinition} class
+	 * @param sort
+	 * @param limit
+	 * @param conditions
+	 * @param dynamicColumnsType
 	 * @return the SQL string
 	 */
 	public String selectByCondition (TableDefinition table, Sort sort, long limit, final List<Condition> conditions,  final Map<String, String> dynamicColumnsType);
-
+	
 	/**
 	 * generate SQL for saving row(s) 
 	 * 
