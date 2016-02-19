@@ -120,7 +120,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public <S extends T> S save (S entity) {
 		Preconditions.checkNotNull(entity, "entity must be provided");
 		Preconditions.checkState(rowColumnMapper!=null, "rowColumnMapper must be initiated");
-		Preconditions.checkState(tableDefinition.isReadonly(), "table is readonly");
+		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 
 		final Map<String, Object> columns = rowColumnMapper.mapColumns(entity);		
 		final Map<String, Object> dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
@@ -143,7 +143,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public <S extends T> Iterable<S> save (final Iterable<S> entities) {
 		Preconditions.checkNotNull(entities, "entities must be provided");
 		Preconditions.checkState(rowColumnMapper!=null, "rowColumnMapper must be initiated");
-		Preconditions.checkState(tableDefinition.isReadonly(), "table is readonly");
+		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 		
 		List<Object[]> batchArgs = new LinkedList<Object[]>();
 		Map<String, Object> columns;
@@ -197,7 +197,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public void delete (ID id) {
 		Preconditions.checkNotNull(id, "id must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
-		Preconditions.checkState(tableDefinition.isReadonly(), "table is readonly");
+		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
 		this.transactionalUpdate(sqlGrammar.delete(tableDefinition), idColumns);
@@ -211,7 +211,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	public void delete (final Iterable<ID> ids) {
 		Preconditions.checkNotNull(ids, "ids must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
-		Preconditions.checkState(tableDefinition.isReadonly(), "table is readonly");
+		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 
 		Iterator<ID> iter = ids.iterator();
 		Preconditions.checkArgument(iter.hasNext(), "ids must be provided");
