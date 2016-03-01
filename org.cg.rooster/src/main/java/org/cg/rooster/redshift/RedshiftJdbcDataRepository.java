@@ -1,6 +1,9 @@
 package org.cg.rooster.redshift;
 
 import java.io.Serializable;
+
+import javax.sql.DataSource;
+
 import org.cg.rooster.JdbcDataRepository;
 import org.cg.rooster.core.RowColumnMapper;
 import org.cg.rooster.core.TableDefinition;
@@ -21,7 +24,7 @@ public class RedshiftJdbcDataRepository <T extends Persistable<ID>, ID extends S
 	 * @param tableDefinition
 	 * @param rowColumnMapper
 	 */
-	public RedshiftJdbcDataRepository(RedshiftDataSource dataSource, TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper) {
+	public RedshiftJdbcDataRepository(DataSource dataSource, TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper) {
 		super(tableDefinition, 
 			  rowColumnMapper, 
 			  dataSource,
@@ -34,7 +37,7 @@ public class RedshiftJdbcDataRepository <T extends Persistable<ID>, ID extends S
 	 * @param tableDefinition
 	 * @param rowColumnMapper
 	 */
-	public RedshiftJdbcDataRepository(RedshiftDataSource dataSource, TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper, boolean lazyinit) {
+	public RedshiftJdbcDataRepository(DataSource dataSource, TableDefinition tableDefinition, RowColumnMapper<T> rowColumnMapper, boolean lazyinit) {
 		super(tableDefinition, 
 			  rowColumnMapper, 
 			  dataSource,
