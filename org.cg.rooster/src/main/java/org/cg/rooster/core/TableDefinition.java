@@ -18,7 +18,6 @@ public class TableDefinition {
 	private final List<String> primaryId;
 	private final boolean isMutable;
 	private final boolean isReadonly;
-	private List<String> columnSelection;
 	
 	/**
 	 * @param tableName The table name
@@ -31,7 +30,6 @@ public class TableDefinition {
 		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
 		this.isMutable = false;
 		this.isReadonly = false;
-		this.columnSelection = null;
 	}
 	
 	/**
@@ -46,7 +44,6 @@ public class TableDefinition {
 		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
 		this.isMutable = false;
 		this.isReadonly = isReadonly;
-		this.columnSelection = null;
 	}
 	
 	/**
@@ -66,7 +63,6 @@ public class TableDefinition {
 		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
 		this.isMutable = isMutable;
 		this.isReadonly = false;
-		this.columnSelection = null;
 	}
 	
 	/**
@@ -87,22 +83,8 @@ public class TableDefinition {
 		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
 		this.isMutable = isMutable;
 		this.isReadonly = isReadonly;
-		this.columnSelection = null;
 	}
 
-	/**
-	 * Set the column selection followed by the SELECT statement. By default it will select all ("SELECT *")
-	 * This MUST be in sync with the RowColumnMapper.mapRow()
-	 * @param columnSelection The column names to select
-	 */
-	public void setColumnSelection(String... columnSelection) {
-		this.columnSelection = Collections.unmodifiableList(Arrays.asList(columnSelection));
-	}
-
-	public List<String> getColumnSelection() {
-		return columnSelection;
-	}
-	
 	public String getTableName() {
 		return tableName;
 	}

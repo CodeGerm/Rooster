@@ -1,11 +1,8 @@
 package org.cg.rooster;
 
 import java.io.Serializable;
-import java.util.List;
-
-import org.cg.rooster.core.Condition;
+import org.cg.rooster.core.Query;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.domain.Sort;
 
 /**
  * Interface for generic CRUD operations on a repository for a specific type. 
@@ -19,7 +16,7 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	/**
 	 * save (create/update) the entity
 	 * 
-	 * @param entity
+	 * @param entity the entity to save
 	 * @return the saved entity
 	 */
 	public <S extends T> S save (S entity);
@@ -27,7 +24,7 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	/**
 	 * save (create/update) a collection of entities
 	 * 
-	 * @param entities
+	 * @param entities the entities to save
 	 * @return the saved entities
 	 */
 	public <S extends T> Iterable<S> save (final Iterable<S> entities);
@@ -35,7 +32,7 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	/**
 	 * check if the entity exist by id
 	 * 
-	 * @param id
+	 * @param id the id
 	 * @return true if the entity exists
 	 */
 	public boolean exists (ID id);
@@ -50,16 +47,25 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	/**
 	 * delete a entity by id
 	 *
-	 * @param id
+	 * @param id the id
 	 */
 	public void delete (ID id);
+	
 	
 	/**
 	 * delete a collection of entities by their ids
 	 * 
-	 * @param ids
+	 * @param ids the ids list
 	 */
 	public void delete (final Iterable<ID> ids);
+	
+	/**
+	 * get a entity by id
+	 * 
+	 * @param id the id
+	 * @return the entity
+	 */
+	public T get (ID id);
 	    	
 	/**
 	 * find all entities
@@ -69,108 +75,27 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	public Iterable<T> findAll ();
 	
 	/**
-	 * find all entities and sort
+	 * find entities with query
 	 * 
-	 * @param sort the sorting order description
+	 * @param query the query
 	 * @return a collection of entities
 	 */
-	public Iterable<T> findAll (Sort sort);
-	
-	/**
-	 * find all entities with limit
-	 * 
-	 * @param limit
-	 * @return a collection of entities
-	 */
-	public Iterable<T> findAll (long limit);
-	
-	/**
-	 * find all entities with limit and sort
-	 * 
-	 * @param sort
-	 * @param limit
-	 * @return a collection of entities
-	 */
-	public Iterable<T> findAll (Sort sort, long limit);
-	
-	/**
-	 * find a entity by id
-	 * 
-	 * @param id
-	 * @return the entity
-	 */
-	public T find (ID id);
+	public Iterable<T> find (Query query);
 	
 	/**
 	 * find entities with a collection of ids
 	 * 
-	 * @param ids
+	 * @param ids the ids list
 	 * @return a collection of entities
 	 */
 	public Iterable<T> find (final Iterable<ID> ids);
 	
 	/**
-	 * find entities with a collection of ids and sort
+	 * find entities with a collection of ids and query
 	 * 
-	 * @param ids
-	 * @param sort
+	 * @param ids the ids list
+	 * @param query the query
 	 * @return a collection of entities
 	 */
-	public Iterable<T> find (final Iterable<ID> ids, Sort sort);
-	
-	/**
-	 * find entities with a collection of ids with limit
-	 * 
-	 * @param ids
-	 * @param limit
-	 * @return a collection of entities
-	 */
-	public Iterable<T> find (final Iterable<ID> ids, long limit);
-	
-	/**
-	 * find entities with a collection of ids with limit and sort
-	 * 
-	 * @param ids
-	 * @param sort
-	 * @param limit
-	 * @return a collection of entities
-	 */
-	public Iterable<T> find (final Iterable<ID> ids, Sort sort, long limit);
-	
-	/**
-	 * find entities with conditions
-	 * 
-	 * @param conditions
-	 * @return a collection of entities
-	 */
-	public Iterable<T> find (final List<Condition> conditions);
-	
-	/**
-	 * find entities with conditions and limit
-	 *
-	 * @param conditions
-	 * @param limit
-	 * @return a collection of entities
-	 */
-	public Iterable<T> find (final List<Condition> conditions, long limit);
-	
-	/**
-	 * find entities with conditions and sorting
-	 * 
-	 * @param conditions
-	 * @param sort
-	 * @return a collection of entities
-	 */
-	public Iterable<T> find (final List<Condition> conditions, Sort sort);
-	
-	/**
-	 * find entities with conditions, sorting and limit
-	 *
-	 * @param conditions
-	 * @param sort
-	 * @param limit
-	 * @return a collection of entities
-	 */
-	public Iterable<T> find (final List<Condition> conditions, Sort sort, long limit);
-
+	public Iterable<T> find (final Iterable<ID> ids, Query query);
 }

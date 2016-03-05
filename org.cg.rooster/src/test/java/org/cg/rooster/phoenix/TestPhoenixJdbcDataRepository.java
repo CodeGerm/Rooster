@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.cg.rooster.core.Condition;
+import org.cg.rooster.core.Query;
+import org.cg.rooster.core.QueryBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,7 +89,7 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFindOne() {
-		Event e = dataRepository.find(new Object[] {1, "TEST_USER", 1434441175000l, 1434441177000l});
+		Event e = dataRepository.get(new Object[] {1, "TEST_USER", 1434441175000l, 1434441177000l});
 		System.out.println(e);
 		Assert.assertNotNull(e);
 	}
@@ -100,25 +102,30 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFindAllWithSort() {
-		List<Event> list = (List<Event>) dataRepository.findAll(
-				new Sort(new Order(Direction.DESC, "uid"), 
-						new Order(Direction.ASC, "event_time")));
+		Query query = QueryBuilder.newBuilder()
+				.sort(new Sort(new Order(Direction.DESC, "uid"), new Order(Direction.ASC, "event_time")))
+				.build();
+		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 	}
 
 	@Test
 	public void testFindAllWithLimit() {
-		List<Event> list = (List<Event>) dataRepository.findAll(2);
+		Query query = QueryBuilder.newBuilder()
+				.limit(2)
+				.build();
+		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 		Assert.assertTrue(list.size()==2);
 	}
 
 	@Test
 	public void testFindAllWithLimitAndSort() {
-		List<Event> list = (List<Event>) dataRepository.findAll(
-				new Sort(new Order(Direction.DESC, "uid"), 
-						new Order(Direction.ASC, "event_time"))
-				, 2);
+		Query query = QueryBuilder.newBuilder()
+				.sort(new Sort(new Order(Direction.DESC, "uid"), new Order(Direction.ASC, "event_time")))
+				.limit(2)
+				.build();
+		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 		Assert.assertTrue(list.size()==2);
 	}
@@ -130,7 +137,10 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.IS_NOT_NULL, null);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		List<Event> list = (List<Event>) dataRepository.find(conditions);
+		
+		Query query = QueryBuilder.newBuilder().conditions(conditions).build();
+		
+		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (Event e : list) {
@@ -145,7 +155,13 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		List<Event> list = (List<Event>) dataRepository.find(conditions, new Sort(new Order(Direction.DESC, "receipt_time")));
+		
+		Query query = QueryBuilder.newBuilder()
+				.conditions(conditions)
+				.sort(new Sort(new Order(Direction.DESC, "receipt_time")))
+				.build();
+
+		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (Event e : list) {
@@ -160,7 +176,13 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		List<Event> list = (List<Event>) dataRepository.find(conditions,1);
+		
+		Query query = QueryBuilder.newBuilder()
+				.conditions(conditions)
+				.limit(1)
+				.build();
+		
+		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (Event e : list) {
@@ -175,7 +197,14 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		List<Event> list = (List<Event>) dataRepository.find(conditions, new Sort(new Order(Direction.DESC, "receipt_time")),1);
+		
+		Query query = QueryBuilder.newBuilder()
+				.conditions(conditions)
+				.sort(new Sort(new Order(Direction.DESC, "receipt_time")))
+				.limit(1)
+				.build();
+		
+		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (Event e : list) {

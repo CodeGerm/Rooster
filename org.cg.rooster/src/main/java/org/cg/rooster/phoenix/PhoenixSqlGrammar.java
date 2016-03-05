@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.cg.rooster.core.Condition;
+import org.cg.rooster.core.Query;
 import org.cg.rooster.core.SqlGrammar;
 import org.cg.rooster.core.TableDefinition;
 import org.springframework.data.domain.Sort;
@@ -131,10 +132,12 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, final Map<String, String> dynamicColumnsType) {
+	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, 
+			final Map<String, String> dynamicColumnsType, 
+			final List<String> columnSelectionList) {
 		Preconditions.checkNotNull(table, "table must be provided");
 		
-		String query = SELECT + getColumnSelection(table) + FROM + table.getTableName();
+		String query = SELECT + getColumnSelection(columnSelectionList) + FROM + table.getTableName();
 		if (dynamicColumnsType!=null && !dynamicColumnsType.isEmpty()) {
 			query = query + dynamicColumnsList(dynamicColumnsType);
 		}
@@ -148,11 +151,14 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String selectByCondition (TableDefinition table, Sort sort, long limit, final List<Condition> conditions,  final Map<String, String> dynamicColumnsType) {
+	public String selectByCondition (TableDefinition table, Sort sort, long limit, 
+			final List<Condition> conditions,  
+			final Map<String, String> dynamicColumnsType, 
+			final List<String> columnSelectionList) {
 		Preconditions.checkNotNull(table, "table must be provided");
 		Preconditions.checkNotNull(conditions, "conditions must be provided");
 		
-		String query = SELECT + getColumnSelection(table) + FROM + table.getTableName();
+		String query = SELECT + getColumnSelection(columnSelectionList) + FROM + table.getTableName();
 		if (dynamicColumnsType!=null && !dynamicColumnsType.isEmpty()) {
 			query = query + dynamicColumnsList(dynamicColumnsType);
 		}
@@ -205,9 +211,8 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 		return sb.append(")").toString();
 	}
 	
-	private static String getColumnSelection (TableDefinition table) {
+	private static String getColumnSelection (List<String> columnSelectionList) {
 		String columnsSelection = ALL;
-		List<String> columnSelectionList = table.getColumnSelection();
 		if ( columnSelectionList!=null && !columnSelectionList.isEmpty() ) {
 			StringBuilder sb = new StringBuilder();
 			Iterator<String> iter = columnSelectionList.iterator();
@@ -226,7 +231,7 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 	}
 	
 	private static String limitClause(long limit) {
-		if (limit<0) return "";
+		if (limit<0) return (LIMIT + Query.DEFAULT_QUERY_LIMIT);
 		return LIMIT + limit;
 	}
 	

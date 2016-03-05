@@ -45,9 +45,12 @@ public interface SqlGrammar {
 	 * @param limit
 	 * @param idSize
 	 * @param dynamicColumnsType
+	 * @param columnSelection 
 	 * @return the SQL string
 	 */
-	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, final Map<String, String> dynamicColumnsType);
+	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, 
+			final Map<String, String> dynamicColumnsType, 
+			final List<String> columnSelection);
 	
 	/**
 	 * generate SQL for selecting row(s) with conditions
@@ -57,9 +60,13 @@ public interface SqlGrammar {
 	 * @param limit
 	 * @param conditions
 	 * @param dynamicColumnsType
+	 * @param columnSelection
 	 * @return the SQL string
 	 */
-	public String selectByCondition (TableDefinition table, Sort sort, long limit, final List<Condition> conditions,  final Map<String, String> dynamicColumnsType);
+	public String selectByCondition (TableDefinition table, Sort sort, long limit, 
+			final List<Condition> conditions,  
+			final Map<String, String> dynamicColumnsType, 
+			final List<String> columnSelection);
 	
 	/**
 	 * generate SQL for saving row(s) 
@@ -69,6 +76,7 @@ public interface SqlGrammar {
 	 * @param dynamicColumnMapper The dynamic column mapper
 	 * @return the SQL string
 	 */
-	public String save (TableDefinition table, final Map<String, Object> columnMapper, final Map<String, Object> dynamicColumnMapper);
+	public String save (TableDefinition table, final Map<String, Object> columnMapper, 
+			final Map<String, Object> dynamicColumnMapper);
 
 }

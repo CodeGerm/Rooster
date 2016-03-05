@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.cg.rooster.core.Condition;
+import org.cg.rooster.core.Query;
+import org.cg.rooster.core.QueryBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +42,7 @@ public class TestRedshiftJdbcDataRepository {
 
 	@Test
 	public void testFindOne() {
-		User e = dataRepository.find(new Object[] {"da4b602e-77ec-4a94-b593-6f41b5636727"});
+		User e = dataRepository.get(new Object[] {"da4b602e-77ec-4a94-b593-6f41b5636727"});
 		System.out.println(e);
 		Assert.assertNotNull(e);
 	}
@@ -53,25 +55,30 @@ public class TestRedshiftJdbcDataRepository {
 
 	@Test
 	public void testFindAllWithSort() {
-		List<User> list = (List<User>) dataRepository.findAll(
-				new Sort(new Order(Direction.DESC, "id"), 
-						 new Order(Direction.ASC, "lastinvite")));
+		Query query = QueryBuilder.newBuilder()
+				.sort(new Sort(new Order(Direction.DESC, "id"), new Order(Direction.ASC, "lastinvite")))
+				.build();
+		List<User> list = (List<User>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 	}
 
 	@Test
 	public void testFindAllWithLimit() {
-		List<User> list = (List<User>) dataRepository.findAll(2);
+		Query query = QueryBuilder.newBuilder()
+				.limit(2)
+				.build();
+		List<User> list = (List<User>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 		Assert.assertTrue(list.size()==2);
 	}
 
 	@Test
 	public void testFindAllWithLimitAndSort() {
-		List<User> list = (List<User>) dataRepository.findAll(
-				new Sort(new Order(Direction.DESC, "id"), 
-						 new Order(Direction.ASC, "lastinvite"))
-				         , 2);
+		Query query = QueryBuilder.newBuilder()
+				.sort(new Sort(new Order(Direction.DESC, "id"), new Order(Direction.ASC, "lastinvite")))
+				.limit(2)
+				.build();
+		List<User> list = (List<User>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 		Assert.assertTrue(list.size()==2);
 	}
@@ -83,7 +90,10 @@ public class TestRedshiftJdbcDataRepository {
 		Condition c1 = new Condition("status", RedshiftConditionOperator.EQUAL, "Active");
 		Condition c2 = new Condition("status", RedshiftConditionOperator.EQUAL, "Suspended");
 		conditions.add(new Condition( c1, RedshiftConditionOperator.OR, c2 ) );
-		List<User> list = (List<User>) dataRepository.find(conditions);
+		
+		Query query = QueryBuilder.newBuilder().conditions(conditions).build();
+		
+		List<User> list = (List<User>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (User e : list) {
@@ -98,7 +108,13 @@ public class TestRedshiftJdbcDataRepository {
 		Condition c1 = new Condition("status", RedshiftConditionOperator.EQUAL, "Active");
 		Condition c2 = new Condition("status", RedshiftConditionOperator.EQUAL, "Suspended");
 		conditions.add(new Condition( c1, RedshiftConditionOperator.OR, c2 ) );
-		List<User> list = (List<User>) dataRepository.find(conditions, new Sort(new Order(Direction.DESC, "lastlogin")));
+		
+		Query query = QueryBuilder.newBuilder()
+				.conditions(conditions)
+				.sort(new Sort(new Order(Direction.DESC, "lastlogin")))
+				.build();
+		
+		List<User> list = (List<User>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (User e : list) {
@@ -113,7 +129,13 @@ public class TestRedshiftJdbcDataRepository {
 		Condition c1 = new Condition("status", RedshiftConditionOperator.EQUAL, "Active");
 		Condition c2 = new Condition("status", RedshiftConditionOperator.EQUAL, "Suspended");
 		conditions.add(new Condition( c1, RedshiftConditionOperator.OR, c2 ) );
-		List<User> list = (List<User>) dataRepository.find(conditions, 2);
+		
+		Query query = QueryBuilder.newBuilder()
+				.conditions(conditions)
+				.limit(1)
+				.build();
+		
+		List<User> list = (List<User>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (User e : list) {
@@ -128,7 +150,14 @@ public class TestRedshiftJdbcDataRepository {
 		Condition c1 = new Condition("status", RedshiftConditionOperator.EQUAL, "Active");
 		Condition c2 = new Condition("status", RedshiftConditionOperator.EQUAL, "Suspended");
 		conditions.add(new Condition( c1, RedshiftConditionOperator.OR, c2 ) );
-		List<User> list = (List<User>) dataRepository.find(conditions, new Sort(new Order(Direction.DESC, "lastlogin")), 100);
+		
+		Query query = QueryBuilder.newBuilder()
+				.conditions(conditions)
+				.sort(new Sort(new Order(Direction.DESC, "lastlogin")))
+				.limit(100)
+				.build();
+		
+		List<User> list = (List<User>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
 		for (User e : list) {
