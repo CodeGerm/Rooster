@@ -94,7 +94,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		this.transactionManager = new DataSourceTransactionManager(dataSource);
 	}
 	
-	public JdbcTemplate getJdbcTemplate() {
+	private JdbcTemplate getJdbcTemplate() {
 		return jdbcTemplate;
 	}
 	
