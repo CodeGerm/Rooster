@@ -17,7 +17,7 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	 * save (create/update) the entity
 	 * 
 	 * @param entity the entity to save
-	 * @return the saved entity
+	 * @return the saved entity, or null if failed
 	 */
 	public <S extends T> S save (S entity);
 	
@@ -25,7 +25,7 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	 * save (create/update) a collection of entities
 	 * 
 	 * @param entities the entities to save
-	 * @return the saved entities
+	 * @return the saved entities, or empty if failed
 	 */
 	public <S extends T> Iterable<S> save (final Iterable<S> entities);
 	
@@ -48,16 +48,18 @@ public interface DataRepository<T extends Persistable<ID>, ID extends Serializab
 	 * delete a entity by id
 	 *
 	 * @param id the id
+	 * @return if succeed
 	 */
-	public void delete (ID id);
+	public boolean delete (ID id);
 	
 	
 	/**
 	 * delete a collection of entities by their ids
 	 * 
 	 * @param ids the ids list
+	 * @return if succeed
 	 */
-	public void delete (final Iterable<ID> ids);
+	public boolean delete (final Iterable<ID> ids);
 	
 	/**
 	 * get a entity by id

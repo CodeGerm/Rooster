@@ -125,12 +125,15 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkState(columns!=null && !columns.isEmpty(), "rowColumnMapper.mapColumns must be implemented");
 		Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 				
-		this.transactionalUpdate(
+		boolean isSucceed = this.transactionalUpdate(
 				sqlGrammar.save(tableDefinition, columns, dynamicColumns), 
 				ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));	
-		
-		LOG.info(String.format("[save]entity saved: %s.", entity));
-		return entity;
+		if (isSucceed) {
+			LOG.info(String.format("[save]entity saved: %s.", entity));
+			return entity;
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -162,10 +165,15 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			}
 		}
 		long start = System.currentTimeMillis();
-		this.transactionalBatchUpdate(createQuery, batchArgs);
+		boolean isSucceed = this.transactionalBatchUpdate(createQuery, batchArgs);
 		long end = System.currentTimeMillis() - start;
-		LOG.info(String.format("[save]saved %s entities in %sms", batchArgs.size(), end));
-		return entities;
+		if (isSucceed) {
+			LOG.info(String.format("[save]saved %s entities in %sms", batchArgs.size(), end));
+			return entities;
+		} else {
+			List<S> empty = Collections.emptyList();
+			return empty;
+		}
 	}
 
 	/**
@@ -191,21 +199,22 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void delete (ID id) {
+	public boolean delete (ID id) {
 		Preconditions.checkNotNull(id, "id must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
-		this.transactionalUpdate(sqlGrammar.delete(tableDefinition), idColumns);
-		LOG.info(String.format("[delete]deleted %s", id));
+		boolean isSucceed = this.transactionalUpdate(sqlGrammar.delete(tableDefinition), idColumns);
+		if (isSucceed) LOG.info(String.format("[delete]deleted %s", id));
+		return isSucceed;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void delete (final Iterable<ID> ids) {
+	public boolean delete (final Iterable<ID> ids) {
 		Preconditions.checkNotNull(ids, "ids must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
@@ -223,8 +232,9 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 				batchArgs.add(new Object[]{id});
 			}
 		}
-		this.transactionalBatchUpdate(sqlGrammar.delete(tableDefinition), batchArgs);
-		LOG.info(String.format("[delete]%s entities deleted", batchArgs.size()));
+		boolean isSucceed = this.transactionalBatchUpdate(sqlGrammar.delete(tableDefinition), batchArgs);
+		if (isSucceed) LOG.info(String.format("[delete]%s entities deleted", batchArgs.size()));
+		return isSucceed;
 	}
 	
 	/**
@@ -362,29 +372,33 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		return result;
 	}
 	
-	private void transactionalUpdate (String preparedStatement, Object... args) {
+	private boolean transactionalUpdate (String preparedStatement, Object... args) {
 		TransactionDefinition def = new DefaultTransactionDefinition();
 		TransactionStatus status = transactionManager.getTransaction(def);
 		try{
 			getJdbcTemplate().update(preparedStatement, args);
 			transactionManager.commit(status);
+			return true;
 		} catch (DataAccessException e) {
 			LOG.error("Error in upserting record, rolling back");
 			transactionManager.rollback(status);
 			LOG.error(Throwables.getStackTraceAsString(e));
+			return false;
 		}
 	}
 	
-	private void transactionalBatchUpdate (String preparedStatement, List<Object[]> args) {
+	private boolean transactionalBatchUpdate (String preparedStatement, List<Object[]> args) {
 		TransactionDefinition def = new DefaultTransactionDefinition();
 		TransactionStatus status = transactionManager.getTransaction(def);
 		try{
 			getJdbcTemplate().batchUpdate(preparedStatement, args);
 			transactionManager.commit(status);
+			return true;
 		} catch (DataAccessException e) {
 			LOG.error("Error in upserting records, rolling back");
 			transactionManager.rollback(status);
 			LOG.error(Throwables.getStackTraceAsString(e));
+			return false;
 		}
 	}
 
