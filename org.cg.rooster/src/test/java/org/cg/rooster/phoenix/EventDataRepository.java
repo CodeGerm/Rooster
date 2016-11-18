@@ -2,6 +2,7 @@ package org.cg.rooster.phoenix;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -29,8 +30,8 @@ public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object
 			Event idEvent = new Event();
 			idEvent.setTenantId(rs.getInt("tid"));
 			idEvent.setUserId(rs.getString("uid"));
-			idEvent.setEventTime(rs.getDate("event_time"));
-			idEvent.setReceiptTime(rs.getDate("receipt_time"));
+			idEvent.setEventTime(new Date(rs.getLong("event_time")));
+			idEvent.setReceiptTime(new Date(rs.getLong("receipt_time")));
 			idEvent.setName(rs.getString("name"));
 			idEvent.setMessage(rs.getString("message"));
 			idEvent.setVersion(rs.getInt("version"));
@@ -42,8 +43,8 @@ public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object
 			Map<String, Object> columnMapping = new LinkedHashMap<String, Object>();
 	        columnMapping.put("tid", t.getTenantId());
 	        columnMapping.put("uid", t.getUserId());
-	        columnMapping.put("event_time", t.getEventTime());
-	        columnMapping.put("receipt_time", t.getReceiptTime());
+	        columnMapping.put("event_time", t.getEventTime().getTime());
+	        columnMapping.put("receipt_time", t.getReceiptTime().getTime());
 	        columnMapping.put("name", t.getName());
 	        columnMapping.put("message", t.getMessage());
 	        columnMapping.put("version", t.getVersion());

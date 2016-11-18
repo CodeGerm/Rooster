@@ -49,6 +49,7 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testExists() {
+		dataRepository.save(genEvent());
 		boolean isExist = dataRepository.exists(new Object[] {1, "TEST_USER", 1434441175000l, 1434441177000l});
 		Assert.assertTrue(isExist);
 	}
@@ -89,6 +90,7 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFindOne() {
+		dataRepository.save(genEvent());
 		Event e = dataRepository.get(new Object[] {1, "TEST_USER", 1434441175000l, 1434441177000l});
 		System.out.println(e);
 		Assert.assertNotNull(e);
@@ -132,6 +134,14 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFind() {
+		List<Event> events = new LinkedList<Event>();
+		Event event = genEvent();
+		event.setEventTime(new Date(1436390151975l));
+		events.add(event);
+		Event event2 = genEvent();
+		event2.setEventTime(new Date(1436216440707l));
+		events.add(event2);
+		dataRepository.save(events);		
 		List<Condition> conditions = new LinkedList<Condition>();
 		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.IS_NOT_NULL, null);
@@ -150,6 +160,14 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFindWithSort() {
+		List<Event> events = new LinkedList<Event>();
+		Event event = genEvent();
+		event.setEventTime(new Date(1436390151975l));
+		events.add(event);
+		Event event2 = genEvent();
+		event2.setEventTime(new Date(1436216440707l));
+		events.add(event2);
+		dataRepository.save(events);
 		List<Condition> conditions = new LinkedList<Condition>();
 		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
@@ -171,6 +189,9 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFindWithLimit() {
+		Event event = genEvent();
+		event.setEventTime(new Date(1436390151975l));
+		dataRepository.save(event);
 		List<Condition> conditions = new LinkedList<Condition>();
 		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
@@ -192,6 +213,9 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFindWithLimitAndSort() {
+		Event event = genEvent();
+		event.setEventTime(new Date(1436390151975l));
+		dataRepository.save(event);
 		List<Condition> conditions = new LinkedList<Condition>();
 		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
@@ -214,10 +238,10 @@ public class TestPhoenixJdbcDataRepository {
 
 	private static Event genEvent() {
 		Event event = new Event();
-		event.setEventTime(new Date());
+		event.setEventTime(new Date(1434441177000l));
 		event.setMessage("TEST");
 		event.setName("TEST_NAME");
-		event.setReceiptTime(new Date());
+		event.setReceiptTime(new Date(1434441175000l));
 		event.setTenantId(1);
 		event.setUserId("TEST_USER");
 		event.setVersion(1);

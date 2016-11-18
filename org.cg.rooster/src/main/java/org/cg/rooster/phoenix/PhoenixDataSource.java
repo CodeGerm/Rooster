@@ -1,6 +1,6 @@
 package org.cg.rooster.phoenix;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.hadoop.hbase.util.Strings;
 
 import com.google.common.base.Preconditions;
@@ -120,7 +120,7 @@ public class PhoenixDataSource extends BasicDataSource {
 	public void setMaxConnectionSize(Integer maxConnectionSize) {
 		Preconditions.checkNotNull(maxConnectionSize, "maxConnectionSize must be provided");
 		this.maxConnectionSize = maxConnectionSize;
-		this.setMaxActive(maxConnectionSize);
+		this.setMaxIdle(maxConnectionSize);
 	}
 
 	public Boolean isAutocommit() {

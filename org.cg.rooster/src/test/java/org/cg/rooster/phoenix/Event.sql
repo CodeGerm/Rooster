@@ -1,13 +1,11 @@
 CREATE TABLE IF NOT EXISTS Event
 (
-    tid          VARCHAR NOT NULL,
+    tid          INTEGER NOT NULL,
     uid          VARCHAR NOT NULL,
-    event_time   TIMESTAMP,
-    receipt_time TIMESTAMP,
+    event_time   BIGINT  NOT NULL,
+    receipt_time BIGINT  NOT NULL,
     name         VARCHAR,
     message      VARCHAR,
     version      INTEGER,
-    status       VARCHAR,
-    context      VARCHAR,
-CONSTRAINT Event_PK PRIMARY KEY (tid, uid, event_time, receipt_time)
+CONSTRAINT Event_PK PRIMARY KEY (tid, uid, event_time, receipt_time))
 COMPRESSION='SNAPPY';

@@ -88,13 +88,21 @@ public class Event implements Persistable<Object[]> {
 
 	@Override
 	public Object[] getId() {
-		return JdbcDataRepository.primaryKey(tenantId, userId, eventTime, receiptTime);
+		return JdbcDataRepository.primaryKey(tenantId, userId, eventTime.getTime(), receiptTime.getTime());
 	}
 
 	@Override
 	public boolean isNew() {
 		//not needed for Phoenix
 		return false;
+	}
+
+	@Override
+	public String toString() {
+		return "Event [tenantId=" + tenantId + ", userId=" + userId
+				+ ", eventTime=" + eventTime + ", receiptTime=" + receiptTime
+				+ ", name=" + name + ", message=" + message + ", version="
+				+ version + "]";
 	}
 
 }
