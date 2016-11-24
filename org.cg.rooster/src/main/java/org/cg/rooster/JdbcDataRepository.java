@@ -11,8 +11,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.cg.rooster.core.Condition;
 import org.cg.rooster.core.Query;
 import org.cg.rooster.core.RowColumnMapper;
@@ -40,7 +40,7 @@ import com.google.common.base.Throwables;
  */
 public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends Serializable> implements DataRepository<T, ID> {
 
-	private static final Log LOG = LogFactory.getLog(JdbcDataRepository.class);
+	private static final Logger LOG = LoggerFactory.getLogger(JdbcDataRepository.class);
 
 	private final TableDefinition tableDefinition;
 	private final RowColumnMapper<T> rowColumnMapper;
