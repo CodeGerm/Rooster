@@ -5,16 +5,35 @@
 	<artifactId>org.cg.rooster</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 
-	<name>Rooster</name>
+	<name>${project.groupId}:${project.artifactId}</name>
+	<description>A generic JDBC DAO with implementation to support Apache Phoenix.</description>
 	<url>https://github.com/CodeGerm/Rooster</url>
 	<organization>
 		<name>CodeGerm</name>
 		<url>https://github.com/CodeGerm</url>
 	</organization>
 	<scm>
-		<url>https://github.com/CodeGerm/Rooster.git</url>
+		<url>https://github.com/CodeGerm/Rooster</url>
+		<connection>scm:git:git@github.com:CodeGerm/Rooster.git</connection>
+		<developerConnection>scm:git:git@github.com:CodeGerm/Rooster.git</developerConnection>
 	</scm>
-
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Weizhi Li</name>
+			<email>weizhi.li@me.com</email>
+			<organization>CodeGerm</organization>
+			<organizationUrl>https://github.com/CodeGerm</organizationUrl>
+		</developer>
+	</developers>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<dependencies>
 		<!-- Spring -->
 		<dependency>
@@ -98,7 +117,7 @@
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.3</version>
+				<version>1.6.7</version>
 				<extensions>true</extensions>
 				<configuration>
 					<serverId>ossrh</serverId>
@@ -138,12 +157,16 @@
 				<executions>
 					<execution>
 						<id>copy-dependencies</id>
-						<phase>package</phase>
+						<phase>prepare-package</phase>
 						<goals>
 							<goal>copy-dependencies</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<outputDirectory>target/lib</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+							<excludeScope>provided</excludeScope>
 						</configuration>
 					</execution>
 				</executions>
@@ -163,8 +186,9 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-release-plugin</artifactId>
-					<version>2.5</version>
+					<version>2.5.3</version>
 					<configuration>
+						<autoVersionSubmodules>true</autoVersionSubmodules>
 						<useReleaseProfile>false</useReleaseProfile>
 						<releaseProfiles>release</releaseProfiles>
 						<goals>deploy</goals>
@@ -266,7 +290,6 @@
 			<id>ossrh</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
-
 		<repository>
 			<id>ossrh</id>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
@@ -279,5 +302,4 @@
 			<url>https://repository.cloudera.com/artifactory/repo/</url>
 		</repository>
 	</repositories>
-
 </project>
