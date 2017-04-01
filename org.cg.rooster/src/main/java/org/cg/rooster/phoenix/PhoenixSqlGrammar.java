@@ -193,6 +193,7 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 		if (iter.hasNext()) sb.append(COMMA);
 		while ( iter.hasNext() ) {
 			e = iter.next();
+			Preconditions.checkNotNull(e.getValue(), "Dynamic column's value cannot be null");
 			sb.append(e.getKey()).append(SPACE).append( getParamDataType(e.getValue()) );
 			if (iter.hasNext()) {
 				sb.append(COMMA);

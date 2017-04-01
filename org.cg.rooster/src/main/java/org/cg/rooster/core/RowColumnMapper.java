@@ -1,8 +1,6 @@
 package org.cg.rooster.core;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.springframework.jdbc.core.RowMapper;
 
 /**
@@ -21,7 +19,7 @@ public abstract class RowColumnMapper<T> implements RowMapper<T> {
 	 * @param t The entity to be mapped
 	 * @return A Map that maps each fields of data to its column names in table
 	 */
-	public Map<String, Object> mapColumns(T t) {
+	public LinkedHashMap<String, Object> mapColumns(T t) {
 		return new LinkedHashMap<String, Object>();
 	}
 	
@@ -35,7 +33,7 @@ public abstract class RowColumnMapper<T> implements RowMapper<T> {
 	 * @param t The entity to be mapped
 	 * @return A Map that maps fields of data to its dynamic column names in table
 	 */
-	public Map<String, Object> mapDynamicColumns(T t) {
+	public LinkedHashMap<String, Object> mapDynamicColumns(T t) {
 		return new LinkedHashMap<String, Object>();
 	}
 	
@@ -47,7 +45,7 @@ public abstract class RowColumnMapper<T> implements RowMapper<T> {
 	 * 
 	 * @return A Map that maps the column name and it's data type
 	 */
-	public Map<String, String> mapDynamicColumnsType() {
+	public LinkedHashMap<String, String> mapDynamicColumnsType() {
 		return new LinkedHashMap<String, String>();
 	}
 

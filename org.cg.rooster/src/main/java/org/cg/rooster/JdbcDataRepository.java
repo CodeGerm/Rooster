@@ -1,12 +1,15 @@
 package org.cg.rooster;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.AbstractMap.SimpleImmutableEntry;
 
 import javax.sql.DataSource;
 
@@ -125,7 +128,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkState(columns!=null && !columns.isEmpty(), "rowColumnMapper.mapColumns must be implemented");
 		Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 				
-		boolean isSucceed = this.transactionalUpdate(
+		boolean isSucceed = this.upsert(
 				sqlGrammar.save(tableDefinition, columns, dynamicColumns), 
 				ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));	
 		if (isSucceed) {
@@ -145,10 +148,9 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkState(rowColumnMapper!=null, "rowColumnMapper must be initiated");
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 		
-		List<Object[]> batchArgs = new LinkedList<Object[]>();
+		List<Entry<String,Object[]>> queryArgs= new ArrayList<Entry<String,Object[]>>();
 		Map<String, Object> columns;
 		Map<String, Object> dynamicColumns;
-		String createQuery = "";
 		Iterator<S> iter = entities.iterator();
 		S entity;
 		while (iter.hasNext()) {
@@ -157,18 +159,16 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
 			Preconditions.checkState(columns!=null && !columns.isEmpty(), "rowColumnMapper.mapColumns must be implemented");
 			Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
-			batchArgs.add(ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));
-			if (!iter.hasNext()) {
-				// In order to get column mapping for query construction, 
-				// we only need to get the mapping from the last entity.
-				createQuery = sqlGrammar.save(tableDefinition, columns, dynamicColumns);
-			}
+			queryArgs.add(new SimpleImmutableEntry<String, Object[]>(
+					sqlGrammar.save(tableDefinition, columns, dynamicColumns), 
+					ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()))
+					);
 		}
 		long start = System.currentTimeMillis();
-		boolean isSucceed = this.transactionalBatchUpdate(createQuery, batchArgs);
+		boolean isSucceed = this.upsertBatchQuery(queryArgs);
 		long end = System.currentTimeMillis() - start;
 		if (isSucceed) {
-			LOG.info(String.format("[save]saved %s entities in %sms", batchArgs.size(), end));
+			LOG.info(String.format("[save]saved %s entities in %sms", queryArgs.size(), end));
 			return entities;
 		} else {
 			List<S> empty = Collections.emptyList();
@@ -205,7 +205,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
-		boolean isSucceed = this.transactionalUpdate(sqlGrammar.delete(tableDefinition), idColumns);
+		boolean isSucceed = this.upsert(sqlGrammar.delete(tableDefinition), idColumns);
 		if (isSucceed) LOG.info(String.format("[delete]deleted %s", id));
 		return isSucceed;
 	}
@@ -232,7 +232,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 				batchArgs.add(new Object[]{id});
 			}
 		}
-		boolean isSucceed = this.transactionalBatchUpdate(sqlGrammar.delete(tableDefinition), batchArgs);
+		boolean isSucceed = this.upsertBatch(sqlGrammar.delete(tableDefinition), batchArgs);
 		if (isSucceed) LOG.info(String.format("[delete]%s entities deleted", batchArgs.size()));
 		return isSucceed;
 	}
@@ -372,26 +372,36 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		return result;
 	}
 	
-	private boolean transactionalUpdate (String preparedStatement, Object... args) {
-		TransactionDefinition def = new DefaultTransactionDefinition();
-		TransactionStatus status = transactionManager.getTransaction(def);
+	private boolean upsert (String preparedStatement, Object... args) {
 		try{
 			getJdbcTemplate().update(preparedStatement, args);
-			transactionManager.commit(status);
 			return true;
 		} catch (DataAccessException e) {
-			LOG.error("Error in upserting record, rolling back");
-			transactionManager.rollback(status);
+			LOG.error("Error in upserting record");
 			LOG.error(Throwables.getStackTraceAsString(e));
 			return false;
 		}
 	}
 	
-	private boolean transactionalBatchUpdate (String preparedStatement, List<Object[]> args) {
+	private boolean upsertBatch (String preparedStatement, List<Object[]> args) {
+		try{
+			getJdbcTemplate().batchUpdate(preparedStatement, args);
+			return true;
+		} catch (DataAccessException e) {
+			LOG.error("Error in upserting records");
+			LOG.error(Throwables.getStackTraceAsString(e));
+			return false;
+		}
+	}
+	
+	private boolean upsertBatchQuery (List<Entry<String,Object[]>>  queryArgs) {
 		TransactionDefinition def = new DefaultTransactionDefinition();
 		TransactionStatus status = transactionManager.getTransaction(def);
 		try{
-			getJdbcTemplate().batchUpdate(preparedStatement, args);
+			for (Entry<String, Object[]> e : queryArgs) {
+				System.out.println("here" + queryArgs.size());
+				getJdbcTemplate().update(e.getKey(), e.getValue());			
+			}
 			transactionManager.commit(status);
 			return true;
 		} catch (DataAccessException e) {

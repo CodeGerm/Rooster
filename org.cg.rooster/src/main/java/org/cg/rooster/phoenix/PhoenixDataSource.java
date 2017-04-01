@@ -1,24 +1,31 @@
 package org.cg.rooster.phoenix;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+import java.util.Properties;
+
 import org.apache.hadoop.hbase.util.Strings;
 
 import com.google.common.base.Preconditions;
 
 /**
- * Extends a {@link BasicDataSource} with settings that Apache Phoenix supports
+ * Extends a {@link DriverManagerDataSource} with settings that Apache Phoenix supports
  * @author WZ
  *
  */
-public class PhoenixDataSource extends BasicDataSource {
+public class PhoenixDataSource extends DriverManagerDataSource {
 
 	protected String phoenixDriverClassName; 
 	protected String phoenixConnectionUrl;
-	protected Integer initialConnectionSize;
-	protected Integer maxConnectionSize;
+	protected Integer upsertBatchSize;
 	protected Boolean autocommit;
-	protected Integer tenantId;
+	protected String tenantId;
 
+	private static final Integer DEFAULT_UPSERT_BATCH_SIZE = 1000;
+	private static final String TENANT_ID_ATTRIB = "TenantId";
+	private static final String UPSERT_BATCH_SIZE_ATTRIB = "UpsertBatchSize";
+	private static final String AUTO_COMMIT_ATTRIB = "AutoCommit";
+    
 	public PhoenixDataSource() {
 		
 	}
@@ -31,55 +38,56 @@ public class PhoenixDataSource extends BasicDataSource {
 	public PhoenixDataSource(
 			String phoenixDriverClassName, 
 			String phoenixConnectionUrl) {
-		super();
-		setPhoenixDriverClassName(phoenixDriverClassName);
-		setPhoenixConnectionUrl(phoenixConnectionUrl);
+		this(phoenixDriverClassName, phoenixConnectionUrl, true);
 	}
 	
 	/**
 	 * 
 	 * @param phoenixDriverClassName The JDBC driver class name
 	 * @param phoenixConnectionUrl The connection url
-	 * @param initialConnectionSize The initial connection size
-	 * @param maxConnectionSize The maxim connection size
 	 * @param autocommit Disable auto commit if you want batch update
 	 */
 	public PhoenixDataSource(
 			String phoenixDriverClassName, 
-			String phoenixConnectionUrl, 
-			Integer initialConnectionSize,
-			Integer maxConnectionSize, 
+			String phoenixConnectionUrl,
 			Boolean autocommit) {
-		super();
-		setPhoenixDriverClassName(phoenixDriverClassName);
-		setPhoenixConnectionUrl(phoenixConnectionUrl);
-		setInitialConnectionSize(initialConnectionSize);
-		setMaxConnectionSize(maxConnectionSize);
-		setAutocommit(autocommit);
+		this(phoenixDriverClassName, phoenixConnectionUrl, autocommit, DEFAULT_UPSERT_BATCH_SIZE);
 	}
 	
 	/**
 	 * 
 	 * @param phoenixDriverClassName The JDBC driver class name
 	 * @param phoenixConnectionUrl The connection url
-	 * @param initialConnectionSize The initial connection size
-	 * @param maxConnectionSize The maxim connection size
 	 * @param autocommit Disable auto commit if you want batch update
+	 * @param upsertBatchSize Only used when autoCommit is true
+	 */
+	public PhoenixDataSource(
+			String phoenixDriverClassName, 
+			String phoenixConnectionUrl, 
+			Boolean autocommit,
+			Integer upsertBatchSize) {
+		this(phoenixDriverClassName, phoenixConnectionUrl, autocommit, upsertBatchSize, null);
+	}
+	
+	/**
+	 * 
+	 * @param phoenixDriverClassName The JDBC driver class name
+	 * @param phoenixConnectionUrl The connection url
+	 * @param autocommit Disable auto commit if you want batch update
+	 * @param upsertBatchSize Only used when autoCommit is true
 	 * @param tenantId The tenant Id Note: DDL property has to be enabled: http://phoenix.apache.org/multi-tenancy.html
 	 */
 	public PhoenixDataSource(
 			String phoenixDriverClassName,
 			String phoenixConnectionUrl, 
-			Integer initialConnectionSize,
-			Integer maxConnectionSize, 
-			Boolean autocommit, 
-			Integer tenantId) {
+			Boolean autocommit,
+			Integer upsertBatchSize,
+			String tenantId) {
 		super();
 		setPhoenixDriverClassName(phoenixDriverClassName);
 		setPhoenixConnectionUrl(phoenixConnectionUrl);
-		setInitialConnectionSize(initialConnectionSize);
-		setMaxConnectionSize(maxConnectionSize);
 		setAutocommit(autocommit);
+		setUpsertBatchSize(upsertBatchSize);
 		setTenantId(tenantId);
 	}
 
@@ -103,26 +111,6 @@ public class PhoenixDataSource extends BasicDataSource {
 		this.setUrl(phoenixConnectionUrl);
 	}
 
-	public Integer getInitialConnectionSize() {
-		return initialConnectionSize;
-	}
-
-	public void setInitialConnectionSize(Integer initialConnectionSize) {
-		Preconditions.checkNotNull(initialConnectionSize, "initialConnectionSize must be provided");
-		this.initialConnectionSize = initialConnectionSize;
-		this.setInitialSize(initialConnectionSize);
-	}
-
-	public Integer getMaxConnectionSize() {
-		return maxConnectionSize;
-	}
-
-	public void setMaxConnectionSize(Integer maxConnectionSize) {
-		Preconditions.checkNotNull(maxConnectionSize, "maxConnectionSize must be provided");
-		this.maxConnectionSize = maxConnectionSize;
-		this.setMaxIdle(maxConnectionSize);
-	}
-
 	public Boolean isAutocommit() {
 		return autocommit;
 	}
@@ -130,18 +118,42 @@ public class PhoenixDataSource extends BasicDataSource {
 	public void setAutocommit(Boolean autocommit) {
 		Preconditions.checkNotNull(autocommit, "autocommit must be provided");
 		this.autocommit = autocommit;
-		this.setDefaultAutoCommit(autocommit);
+		this.setConnectionProperty(AUTO_COMMIT_ATTRIB, autocommit.toString());
+	}	
+	
+	public Integer getUpsertBatchSize() {
+		return upsertBatchSize;
 	}
 
-	public Integer getTenantId() {
+	public void setUpsertBatchSize(Integer upsertBatchSize) {
+		Preconditions.checkArgument(upsertBatchSize!=null&&upsertBatchSize>0, "upsertBatchSize must be valid");
+		this.upsertBatchSize = upsertBatchSize;
+		Integer batchSize = upsertBatchSize != null ? upsertBatchSize : DEFAULT_UPSERT_BATCH_SIZE;
+		if (this.autocommit) {
+			this.setConnectionProperty(UPSERT_BATCH_SIZE_ATTRIB, batchSize.toString());
+		}
+	}
+
+	public String getTenantId() {
 		return tenantId;
 	}
 
-	public void setTenantId(Integer tenantId) {
-		Preconditions.checkNotNull(tenantId, "tenantId must be provided");
-		this.tenantId = tenantId;
-		final String tenantIdProperty = String.format("TenantId=%s;", tenantId);
-		this.setConnectionProperties(tenantIdProperty);
+	public void setTenantId(String tenantId) {
+		if (!Strings.isEmpty(tenantId)) {
+		  this.tenantId = tenantId;
+	      this.setConnectionProperty(TENANT_ID_ATTRIB, tenantId);
+		}
+	}
+	
+	private void setConnectionProperty(String key, String value) {
+		Preconditions.checkArgument(!Strings.isEmpty(key), "key must be provided");
+		Preconditions.checkArgument(!Strings.isEmpty(value), "value must be provided");
+		Properties connectionProperties = this.getConnectionProperties();
+		if (connectionProperties == null) {
+			connectionProperties = new Properties();
+		}
+		connectionProperties.setProperty(key, value);
+		this.setConnectionProperties(connectionProperties);
 	}
 
 }

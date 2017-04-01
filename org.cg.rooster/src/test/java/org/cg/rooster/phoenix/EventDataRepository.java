@@ -4,8 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.cg.rooster.core.RowColumnMapper;
 import org.cg.rooster.core.TableDefinition;
 
@@ -20,7 +18,7 @@ public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object
 		super( dataSource, tableDef, ROW_COLUMN_MAPPER );
 	}
 
-	private final static PhoenixDataSource dataSource = new PhoenixDataSource("org.apache.phoenix.jdbc.PhoenixDriver", "jdbc:phoenix:localhost", 20, 0, false);
+	private final static PhoenixDataSource dataSource = new PhoenixDataSource("org.apache.phoenix.jdbc.PhoenixDriver", "jdbc:phoenix:10.0.1.31", true);
 	
 	private final static TableDefinition tableDef = new TableDefinition("Event", true, "tid", "uid", "event_time", "receipt_time");
 	
@@ -39,8 +37,8 @@ public class EventDataRepository extends PhoenixJdbcDataRepository<Event, Object
 		}
 
 		@Override
-		public Map<String, Object> mapColumns(Event t) {
-			Map<String, Object> columnMapping = new LinkedHashMap<String, Object>();
+		public LinkedHashMap<String, Object> mapColumns(Event t) {
+			LinkedHashMap<String, Object> columnMapping = new LinkedHashMap<String, Object>();
 	        columnMapping.put("tid", t.getTenantId());
 	        columnMapping.put("uid", t.getUserId());
 	        columnMapping.put("event_time", t.getEventTime().getTime());

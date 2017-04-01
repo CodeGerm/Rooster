@@ -1,5 +1,7 @@
 package org.cg.rooster.phoenix;
 
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,8 +51,9 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testExists() {
-		dataRepository.save(genEvent());
-		boolean isExist = dataRepository.exists(new Object[] {1, "TEST_USER", 1434441175000l, 1434441177000l});
+		Event e = genEvent();
+		dataRepository.save(e);
+		boolean isExist = dataRepository.exists(new Object[] {e.getTenantId(), e.getUserId(), e.getEventTime().getTime(), e.getReceiptTime().getTime()});
 		Assert.assertTrue(isExist);
 	}
 
@@ -90,10 +93,11 @@ public class TestPhoenixJdbcDataRepository {
 
 	@Test
 	public void testFindOne() {
-		dataRepository.save(genEvent());
-		Event e = dataRepository.get(new Object[] {1, "TEST_USER", 1434441175000l, 1434441177000l});
-		System.out.println(e);
-		Assert.assertNotNull(e);
+		Event e = genEvent();
+		dataRepository.save(e);
+		Event eo = dataRepository.get(new Object[] {e.getTenantId(), e.getUserId(), e.getEventTime().getTime(), e.getReceiptTime().getTime()});
+		System.out.println(eo);
+		Assert.assertNotNull(eo);
 	}
 
 	@Test
@@ -169,7 +173,7 @@ public class TestPhoenixJdbcDataRepository {
 		events.add(event2);
 		dataRepository.save(events);
 		List<Condition> conditions = new LinkedList<Condition>();
-		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
+		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, event.getUserId()));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
@@ -193,7 +197,7 @@ public class TestPhoenixJdbcDataRepository {
 		event.setEventTime(new Date(1436390151975l));
 		dataRepository.save(event);
 		List<Condition> conditions = new LinkedList<Condition>();
-		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
+		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, event.getUserId()));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
@@ -217,7 +221,7 @@ public class TestPhoenixJdbcDataRepository {
 		event.setEventTime(new Date(1436390151975l));
 		dataRepository.save(event);
 		List<Condition> conditions = new LinkedList<Condition>();
-		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
+		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, event.getUserId()));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
@@ -236,6 +240,8 @@ public class TestPhoenixJdbcDataRepository {
 		}
 	}
 
+	private static SecureRandom random = new SecureRandom();	
+	
 	private static Event genEvent() {
 		Event event = new Event();
 		event.setEventTime(new Date(1434441177000l));
@@ -243,7 +249,7 @@ public class TestPhoenixJdbcDataRepository {
 		event.setName("TEST_NAME");
 		event.setReceiptTime(new Date(1434441175000l));
 		event.setTenantId(1);
-		event.setUserId("TEST_USER");
+		event.setUserId(new BigInteger(130, random).toString(32));
 		event.setVersion(1);
 		return event;
 	}
