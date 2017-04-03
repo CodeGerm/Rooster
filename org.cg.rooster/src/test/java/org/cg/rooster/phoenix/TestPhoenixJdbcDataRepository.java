@@ -147,7 +147,7 @@ public class TestPhoenixJdbcDataRepository {
 		events.add(event2);
 		dataRepository.save(events);		
 		List<Condition> conditions = new LinkedList<Condition>();
-		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL, "TEST_USER"));
+		conditions.add(new Condition("uid", PhoenixConditionOperator.EQUAL,  event.getUserId()));
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.IS_NOT_NULL, null);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
