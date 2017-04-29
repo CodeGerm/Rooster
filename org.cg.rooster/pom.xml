@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.codegerm</groupId>
 	<artifactId>org.cg.rooster</artifactId>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.2</version>
 
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>A generic JDBC DAO with implementation to support Apache Phoenix.</description>
@@ -15,7 +15,7 @@
 		<url>https://github.com/CodeGerm/Rooster</url>
 		<connection>scm:git:git@github.com:CodeGerm/Rooster.git</connection>
 		<developerConnection>scm:git:git@github.com:CodeGerm/Rooster.git</developerConnection>
-	  <tag>HEAD</tag>
+	  <tag>org.cg.rooster-1.0.2</tag>
   </scm>
 	<licenses>
 		<license>
