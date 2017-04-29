@@ -9,11 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleImmutableEntry;
-
 import javax.sql.DataSource;
-
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.directory.api.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.cg.rooster.core.Condition;
@@ -25,12 +23,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
@@ -49,7 +41,6 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	private final RowColumnMapper<T> rowColumnMapper;
 	private final JdbcTemplate jdbcTemplate;
 	private final SqlGrammar sqlGrammar;
-	private final PlatformTransactionManager transactionManager;
 
 	/**
 	 * Get as primary key
@@ -94,10 +85,9 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		this.jdbcTemplate = new JdbcTemplate(dataSource, lazyinit);
 		this.jdbcTemplate.setFetchSize(1000);
 		this.sqlGrammar = sqlGrammar;
-		this.transactionManager = new DataSourceTransactionManager(dataSource);
 	}
 	
-	protected JdbcTemplate getJdbcTemplate() {
+	public JdbcTemplate getJdbcTemplate() {
 		return jdbcTemplate;
 	}
 	
@@ -153,19 +143,24 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Map<String, Object> dynamicColumns;
 		Iterator<S> iter = entities.iterator();
 		S entity;
+		String createQuery = null;
+		List<Object[]> batchArgs = new LinkedList<Object[]>();
 		while (iter.hasNext()) {
 			entity = iter.next();
 			columns = rowColumnMapper.mapColumns(entity);
 			dynamicColumns = rowColumnMapper.mapDynamicColumns(entity);
 			Preconditions.checkState(columns!=null && !columns.isEmpty(), "rowColumnMapper.mapColumns must be implemented");
 			Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
-			queryArgs.add(new SimpleImmutableEntry<String, Object[]>(
-					sqlGrammar.save(tableDefinition, columns, dynamicColumns), 
-					ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()))
-					);
+			batchArgs.add(ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));
+			String currentQuery = sqlGrammar.save(tableDefinition, columns, dynamicColumns);
+			Preconditions.checkState(Strings.isEmpty(currentQuery), "inconsistent row column mapping in batch");
+			if (createQuery != null) {
+		      Preconditions.checkState(createQuery.equals(currentQuery), "inconsistent row column mapping in batch");
+			}
+			createQuery = currentQuery;
 		}
 		long start = System.currentTimeMillis();
-		boolean isSucceed = this.upsertBatchQuery(queryArgs);
+		boolean isSucceed = this.upsertBatch(createQuery, batchArgs);
 		long end = System.currentTimeMillis() - start;
 		if (isSucceed) {
 			LOG.info(String.format("[save]saved %s entities in %sms", queryArgs.size(), end));
@@ -389,24 +384,6 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			return true;
 		} catch (DataAccessException e) {
 			LOG.error("Error in upserting records");
-			LOG.error(Throwables.getStackTraceAsString(e));
-			return false;
-		}
-	}
-	
-	private boolean upsertBatchQuery (List<Entry<String,Object[]>>  queryArgs) {
-		TransactionDefinition def = new DefaultTransactionDefinition();
-		TransactionStatus status = transactionManager.getTransaction(def);
-		try{
-			for (Entry<String, Object[]> e : queryArgs) {
-				System.out.println("here" + queryArgs.size());
-				getJdbcTemplate().update(e.getKey(), e.getValue());			
-			}
-			transactionManager.commit(status);
-			return true;
-		} catch (DataAccessException e) {
-			LOG.error("Error in upserting records, rolling back");
-			transactionManager.rollback(status);
 			LOG.error(Throwables.getStackTraceAsString(e));
 			return false;
 		}

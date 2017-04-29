@@ -24,12 +24,7 @@ public class TableDefinition {
 	 * @param primaryIdComponents The id components
 	 */
 	public TableDefinition(String tableName, String... primaryIdComponents) {
-		Preconditions.checkArgument(!Strings.isNullOrEmpty(tableName), "tableName must be provided");
-		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
-		this.tableName = tableName;
-		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
-		this.isMutable = false;
-		this.isReadonly = false;
+		this(false, tableName, false, primaryIdComponents);
 	}
 	
 	/**
@@ -38,12 +33,7 @@ public class TableDefinition {
 	 * @param primaryIdComponents The id components
 	 */
 	public TableDefinition(boolean isReadonly, String tableName, String... primaryIdComponents) {
-		Preconditions.checkArgument(!Strings.isNullOrEmpty(tableName), "tableName must be provided");
-		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
-		this.tableName = tableName;
-		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
-		this.isMutable = false;
-		this.isReadonly = isReadonly;
+		this(isReadonly, tableName, false, primaryIdComponents);
 	}
 	
 	/**
@@ -57,12 +47,7 @@ public class TableDefinition {
 	 * @param primaryIdComponents The id components
 	 */
 	public TableDefinition(String tableName, boolean isMutable, String... primaryIdComponents) {
-		Preconditions.checkArgument(!Strings.isNullOrEmpty(tableName), "tableName must be provided");
-		Preconditions.checkArgument(primaryIdComponents.length > 0, "primaryIdComponent must be provided");
-		this.tableName = tableName;
-		this.primaryId = Collections.unmodifiableList(Arrays.asList(primaryIdComponents));
-		this.isMutable = isMutable;
-		this.isReadonly = false;
+		this(false, tableName, isMutable, primaryIdComponents);
 	}
 	
 	/**

@@ -45,7 +45,7 @@ public class PhoenixDataSource extends DriverManagerDataSource {
 	 * 
 	 * @param phoenixDriverClassName The JDBC driver class name
 	 * @param phoenixConnectionUrl The connection url
-	 * @param autocommit Disable auto commit if you want batch update
+	 * @param autocommit auto commit or not
 	 */
 	public PhoenixDataSource(
 			String phoenixDriverClassName, 

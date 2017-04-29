@@ -12,9 +12,19 @@ import org.cg.rooster.core.QueryBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+
+import com.google.common.base.Throwables;
 
 /**
  * Example usage of PhoenixJdbcDataRepository
@@ -24,10 +34,15 @@ import org.springframework.data.domain.Sort.Order;
 public class TestPhoenixJdbcDataRepository {
 
 	private EventDataRepository dataRepository;
+	private EventDataNARepository naDataRepository;
+	private PlatformTransactionManager transactionManager;
+	private static final Logger LOG = LoggerFactory.getLogger(TestPhoenixJdbcDataRepository.class);
 
 	@Before
 	public void setUp() throws Exception {
 		dataRepository = new EventDataRepository();
+		naDataRepository = new EventDataNARepository();
+		transactionManager = new DataSourceTransactionManager(naDataRepository.getJdbcTemplate().getDataSource());
 	}
 
 	@Test
@@ -43,7 +58,17 @@ public class TestPhoenixJdbcDataRepository {
 		for (int i = 0; i < 10; i++) {
 			events.add(genEvent());
 		}
-		dataRepository.save(events);
+		TransactionDefinition def = new DefaultTransactionDefinition();
+		TransactionStatus status = transactionManager.getTransaction(def);
+		try{
+			naDataRepository.save(events);
+			transactionManager.commit(status);
+		} catch (DataAccessException e) {
+			LOG.error("Error in upserting record, rolling back");
+			transactionManager.rollback(status);
+			LOG.error("Error in upserting record");
+			LOG.error(Throwables.getStackTraceAsString(e));
+		}
 		for ( Event e : events) {
 			Assert.assertTrue(dataRepository.exists(e.getId()));
 		}
@@ -151,9 +176,9 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.IS_NOT_NULL, null);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		
+
 		Query query = QueryBuilder.newBuilder().conditions(conditions).build();
-		
+
 		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
@@ -177,7 +202,7 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		
+
 		Query query = QueryBuilder.newBuilder()
 				.conditions(conditions)
 				.sort(new Sort(new Order(Direction.DESC, "receipt_time")))
@@ -201,12 +226,12 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		
+
 		Query query = QueryBuilder.newBuilder()
 				.conditions(conditions)
 				.limit(1)
 				.build();
-		
+
 		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
@@ -225,13 +250,13 @@ public class TestPhoenixJdbcDataRepository {
 		Condition c1 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436390151975l);
 		Condition c2 = new Condition("event_time", PhoenixConditionOperator.EQUAL, 1436216440707l);
 		conditions.add(new Condition( c1, PhoenixConditionOperator.OR, c2 ) );
-		
+
 		Query query = QueryBuilder.newBuilder()
 				.conditions(conditions)
 				.sort(new Sort(new Order(Direction.DESC, "receipt_time")))
 				.limit(1)
 				.build();
-		
+
 		List<Event> list = (List<Event>) dataRepository.find(query);
 		Assert.assertTrue(!list.isEmpty());
 
@@ -241,7 +266,7 @@ public class TestPhoenixJdbcDataRepository {
 	}
 
 	private static SecureRandom random = new SecureRandom();	
-	
+
 	private static Event genEvent() {
 		Event event = new Event();
 		event.setEventTime(new Date(1434441177000l));
