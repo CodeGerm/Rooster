@@ -153,7 +153,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			Preconditions.checkState(dynamicColumns!=null, "rowColumnMapper.mapDynamicColumns cannot cannot return null");
 			batchArgs.add(ArrayUtils.addAll(columns.values().toArray(), dynamicColumns.values().toArray()));
 			String currentQuery = sqlGrammar.save(tableDefinition, columns, dynamicColumns);
-			Preconditions.checkState(Strings.isEmpty(currentQuery), "inconsistent row column mapping in batch");
+			Preconditions.checkState(!Strings.isEmpty(currentQuery), "inconsistent row column mapping in batch");
 			if (createQuery != null) {
 		      Preconditions.checkState(createQuery.equals(currentQuery), "inconsistent row column mapping in batch");
 			}
