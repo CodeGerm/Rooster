@@ -197,8 +197,10 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkNotNull(id, "id must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
-		
+
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
+		Preconditions.checkArgument(idColumns.length == tableDefinition.getPrimaryId().size(), "all id components must be provided ");
+
 		boolean isSucceed = this.upsert(sqlGrammar.delete(tableDefinition, 1, idColumns), filterOutNull(idColumns));
 		if (isSucceed) LOG.info(String.format("[delete]deleted %s", id));
 		return isSucceed;

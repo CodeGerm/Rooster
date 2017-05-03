@@ -36,7 +36,7 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 	public final static String PLACEHOLDER = "?";
 	public final static String PLACEHOLDER_COMMA = "?, ";
 	public final static String EQUAL_PLACEHOLDER = " = ?";
-	public final static String IS_NULL = " is null";
+	public final static String IS_NULL = " IS NULL";
 	public final static String ORDER_BY = " ORDER BY ";
 	public final static String LIMIT = " LIMIT ";
 	
