@@ -36,6 +36,7 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 	public final static String PLACEHOLDER = "?";
 	public final static String PLACEHOLDER_COMMA = "?, ";
 	public final static String EQUAL_PLACEHOLDER = " = ?";
+	public final static String IS_NULL = " is null";
 	public final static String ORDER_BY = " ORDER BY ";
 	public final static String LIMIT = " LIMIT ";
 	
@@ -121,18 +122,18 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String delete (TableDefinition table) {
+	public String delete (TableDefinition table, int idSize, Object[] flatIds) {
 		Preconditions.checkNotNull(table, "table must be provided");
 		
 		String query = DELETE + FROM + table.getTableName();
-		return query + whereByIdsClause(table, 1);
+		return query + whereByIdsClause(table, idSize, flatIds);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, 
+	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, Object[] flatIds,
 			final Map<String, String> dynamicColumnsType, 
 			final List<String> columnSelectionList) {
 		Preconditions.checkNotNull(table, "table must be provided");
@@ -142,7 +143,7 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 			query = query + dynamicColumnsList(dynamicColumnsType);
 		}
 		if (idSize > 0) {
-			query = query + whereByIdsClause(table, idSize);
+			query = query + whereByIdsClause(table, idSize, flatIds);
 		}
 		return query + orderByClause(sort) + limitClause(limit);
 	}
@@ -252,16 +253,22 @@ public class PhoenixSqlGrammar implements SqlGrammar {
 		return sb.toString();
 	}
 	
-	private static String whereByIdsClause(TableDefinition table, int idSize) {
-		final List<String> idComponents = table.getPrimaryId();		
+	private static String whereByIdsClause(TableDefinition table, int idSize, Object[] flatIds) {
+		final List<String> idComponents = table.getPrimaryId();
+		if (idSize>0) Preconditions.checkArgument(flatIds!=null && idComponents.size()==flatIds.length/idSize);
 		final StringBuilder sb = new StringBuilder(WHERE);
 
-		for (int i = 0; i < idSize; i++) {
+		for (int i = 0, j = 0; i < idSize; i++) {
 			if (i > 0) sb.append(OR);
 			sb.append("(");
 			Iterator<String> iter = idComponents.iterator();
-			while ( iter.hasNext() ) {
-				sb.append(iter.next()).append(EQUAL_PLACEHOLDER);
+			while (iter.hasNext()) {
+				sb.append(iter.next());
+				if (flatIds[j++]!=null) {
+					sb.append(EQUAL_PLACEHOLDER);
+				} else {
+					sb.append(IS_NULL);
+				}
 				if (iter.hasNext()) {
 					sb.append(AND);
 				} else {

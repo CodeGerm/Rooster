@@ -32,10 +32,12 @@ public interface SqlGrammar {
 	 * generate SQL for deleting row(s)
 	 * 
 	 * @param table the {@link TableDefinition} class
+	 * @param idSize
+	 * @param flatIds
 	 * @return the SQL string
 	 */
 
-	public String delete (TableDefinition table);
+	public String delete (TableDefinition table, int idSize, Object[] flatIds);
 	
 	/**
 	 * generate SQL for selecting row(s) by id
@@ -44,11 +46,12 @@ public interface SqlGrammar {
 	 * @param sort
 	 * @param limit
 	 * @param idSize
+	 * @param flatIds
 	 * @param dynamicColumnsType
 	 * @param columnSelection 
 	 * @return the SQL string
 	 */
-	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, 
+	public String selectById (TableDefinition table, Sort sort, long limit, int idSize, Object[] flatIds,
 			final Map<String, String> dynamicColumnsType, 
 			final List<String> columnSelection);
 	

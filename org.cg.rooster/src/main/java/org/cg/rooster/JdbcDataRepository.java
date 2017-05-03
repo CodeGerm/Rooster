@@ -177,7 +177,6 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public boolean exists (ID id) {
 		Preconditions.checkNotNull(id, "id must be provided");
-
 		return this.get(id) != null;
 	}
 
@@ -198,9 +197,9 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkNotNull(id, "id must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
-
+		
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
-		boolean isSucceed = this.upsert(sqlGrammar.delete(tableDefinition), idColumns);
+		boolean isSucceed = this.upsert(sqlGrammar.delete(tableDefinition, 1, idColumns), filterOutNull(idColumns));
 		if (isSucceed) LOG.info(String.format("[delete]deleted %s", id));
 		return isSucceed;
 	}
@@ -211,24 +210,26 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public boolean delete (final Iterable<ID> ids) {
 		Preconditions.checkNotNull(ids, "ids must be provided");
+		Preconditions.checkArgument(ids.iterator().hasNext(), "ids must be provided");
 		Preconditions.checkState(tableDefinition.isMutable(), "table is immutable");
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
-
-		Iterator<ID> iter = ids.iterator();
-		Preconditions.checkArgument(iter.hasNext(), "ids must be provided");
-
-		List<Object[]> batchArgs = new LinkedList<Object[]>();
-		ID id;
-		while (iter.hasNext()) {
-			id = iter.next();
+		
+		//need to put all id components for all ids in a single flat array
+		final List<Object> idColumnValuesList = new LinkedList<Object>();
+		int idSize = 0;
+		for (ID id : ids) {
+			List<Object> idList;
 			if (id instanceof Object[]) {
-				batchArgs.add((Object[]) id);
+				idList = Arrays.asList((Object[]) id);
 			} else {
-				batchArgs.add(new Object[]{id});
+				idList = Collections.<Object>singletonList(id);
 			}
+			idColumnValuesList.addAll(idList);
+			idSize++;
 		}
-		boolean isSucceed = this.upsertBatch(sqlGrammar.delete(tableDefinition), batchArgs);
-		if (isSucceed) LOG.info(String.format("[delete]%s entities deleted", batchArgs.size()));
+		Object[] idsArray = idColumnValuesList.toArray();
+		boolean isSucceed = this.upsert(sqlGrammar.delete(tableDefinition, idSize, idsArray), filterOutNull(idsArray));
+		if (isSucceed) LOG.info(String.format("[delete]%s entities deleted", idSize));
 		return isSucceed;
 	}
 	
@@ -238,6 +239,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public T get (ID id) {
 		final Object[] idColumns = (id instanceof Object[]) ? (Object[]) id : new Object[]{id};
+		Preconditions.checkArgument(idColumns.length == tableDefinition.getPrimaryId().size(), "all id components must be provided ");
 		LOG.info(String.format("[get]id:%s", Arrays.toString(idColumns)));
 		
 		long start = System.currentTimeMillis();
@@ -246,11 +248,12 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 						tableDefinition, 
 						null, 
 						Query.DEFAULT_QUERY_LIMIT, 
-						1, 
+						1,
+						idColumns,
 						rowColumnMapper.mapDynamicColumnsType(), 
 						null), 
 				rowColumnMapper,
-				idColumns
+				filterOutNull(idColumns)
 				);
 		long end = System.currentTimeMillis() - start;
 		LOG.info(String.format("[get]found in %sms", end));
@@ -268,7 +271,8 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 						tableDefinition, 
 						null, 
 						Query.DEFAULT_QUERY_LIMIT,
-						-1, 
+						-1,
+						null,
 						rowColumnMapper.mapDynamicColumnsType(), 
 						null), 
 				rowColumnMapper);
@@ -283,7 +287,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public Iterable<T> find(Query query) {
 		Preconditions.checkNotNull(query, "query must be provided");
-
+		
 		List<T> result;
 		long start = System.currentTimeMillis();
 		if (query.getConditions()==null || query.getConditions().isEmpty()) { 
@@ -292,7 +296,8 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 							tableDefinition, 
 							query.getSort(), 
 							query.getLimit(), 
-							-1, 
+							-1,
+							null,
 							rowColumnMapper.mapDynamicColumnsType(), 
 							query.getColumnSelection()), 
 					rowColumnMapper);
@@ -327,14 +332,14 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 	@Override
 	public Iterable<T> find(Iterable<ID> ids, Query query) {
 		Preconditions.checkNotNull(ids, "ids must be provided");
-		Preconditions.checkNotNull(query, "query must be provided");		
+		Preconditions.checkNotNull(query, "query must be provided");
+		
 		if (query.getConditions()!=null && !query.getConditions().isEmpty()) {
 			LOG.warn("[find]conditions will be ignored when lookup by id list");
 		}
 		if (!ids.iterator().hasNext()) {
 			return Collections.emptyList();
 		}
-		
 		//need to put all id components for all ids in a single flat array
 		final List<Object> idColumnValuesList = new LinkedList<Object>();
 		int idSize = 0;
@@ -348,7 +353,6 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			idColumnValuesList.addAll(idList);
 			idSize++;
 		}
-		
 		Object[] idsArray = idColumnValuesList.toArray();		
 		long start = System.currentTimeMillis();
 		List<T> result = getJdbcTemplate().query(
@@ -356,11 +360,12 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 						tableDefinition, 
 						query.getSort(), 
 						query.getLimit(), 
-						idSize, 
+						idSize,
+						idsArray,
 						rowColumnMapper.mapDynamicColumnsType(), 
 						query.getColumnSelection()), 
 				rowColumnMapper, 
-				idsArray);
+				filterOutNull(idsArray));
 		long end = System.currentTimeMillis() - start;
 		LOG.info(String.format("[find]ids:%s; query:%s; found %s in %sms", 
 				Arrays.toString(idsArray), query, result.size(), end));
@@ -388,5 +393,12 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 			return false;
 		}
 	}
-
+	
+	private Object[] filterOutNull (Object[] inputArray) {
+		List<Object> list = new ArrayList<Object>();
+	    for(Object s : inputArray) {
+	       if(s!=null) list.add(s);
+	    }
+	    return list.toArray(new Object[list.size()]);
+	}
 }
