@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.sql.DataSource;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.directory.api.util.Strings;
@@ -138,7 +137,6 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		Preconditions.checkState(rowColumnMapper!=null, "rowColumnMapper must be initiated");
 		Preconditions.checkState(!tableDefinition.isReadonly(), "table is readonly");
 		
-		List<Entry<String,Object[]>> queryArgs= new ArrayList<Entry<String,Object[]>>();
 		Map<String, Object> columns;
 		Map<String, Object> dynamicColumns;
 		Iterator<S> iter = entities.iterator();
@@ -163,7 +161,7 @@ public abstract class JdbcDataRepository <T extends Persistable<ID>, ID extends 
 		boolean isSucceed = this.upsertBatch(createQuery, batchArgs);
 		long end = System.currentTimeMillis() - start;
 		if (isSucceed) {
-			LOG.info(String.format("[save]saved %s entities in %sms", queryArgs.size(), end));
+			LOG.info(String.format("[save]saved %s entities in %sms", batchArgs.size(), end));
 			return entities;
 		} else {
 			List<S> empty = Collections.emptyList();

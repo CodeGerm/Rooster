@@ -18,7 +18,7 @@ public class EventDataNARepository extends PhoenixJdbcDataRepository<Event, Obje
 		super( dataSource, tableDef, ROW_COLUMN_MAPPER );
 	}
 
-	private final static PhoenixDataSource dataSource = new PhoenixDataSource("org.apache.phoenix.jdbc.PhoenixDriver", "jdbc:phoenix:10.0.1.31", false);
+	private final static PhoenixDataSource dataSource = new PhoenixDataSource("org.apache.phoenix.jdbc.PhoenixDriver", "jdbc:phoenix:10.0.0.193", false);
 	
 	private final static TableDefinition tableDef = new TableDefinition("Event", "tid", "uid", "event_time", "receipt_time");
 	
